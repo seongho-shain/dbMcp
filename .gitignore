@@ -1,2 +1,5 @@
 /backend/.env
 /frontend/.env
+
+# YoYo AI version control directory
+.yoyo/
