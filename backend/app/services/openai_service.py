@@ -2,13 +2,17 @@
 OpenAI API 서비스
 OpenAI GPT 모델을 활용한 AI 응답 생성 서비스
 채팅 메시지를 받아서 AI 응답을 생성하고 반환
+파일 첨부 기능 포함 (이미지, 텍스트, 문서)
 """
 import os
 import asyncio
-from typing import List, Dict, Any, Optional
-from fastapi import HTTPException
+import base64
+from typing import List, Dict, Any, Optional, Union
+from pathlib import Path
+from fastapi import HTTPException, UploadFile
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ChatCompletion
+from openai.types import FileObject
 
 from app.config.settings import OPENAI_API_KEY, OPENAI_MODEL
 
@@ -18,6 +22,7 @@ class OpenAIService:
     OpenAI API를 활용한 AI 응답 생성 서비스
     GPT 모델을 통해 자연스러운 대화형 응답 제공
     동기 및 비동기 모드 지원
+    파일 첨부 기능 지원 (이미지, 텍스트, 문서)
     """
     
     def __init__(self):
@@ -34,8 +39,13 @@ class OpenAIService:
             timeout=30.0
         )
         self.model = OPENAI_MODEL or "gpt-4o"
+        
+        # 지원하는 파일 형식 정의
+        self.SUPPORTED_IMAGE_FORMATS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+        self.SUPPORTED_TEXT_FORMATS = {'.txt', '.md', '.json', '.csv', '.py', '.js', '.html', '.css'}
+        self.SUPPORTED_DOC_FORMATS = {'.pdf', '.doc', '.docx'}
     
-    def generate_response(self, messages: List[Dict[str, str]], user_context: Optional[Dict[str, Any]] = None) -> str:
+    def generate_response(self, messages: List[Dict[str, Any]], user_context: Optional[Dict[str, Any]] = None) -> str:
         """
         사용자 메시지에 대한 AI 응답 생성 (동기 방식)
         
@@ -105,7 +115,7 @@ class OpenAIService:
             else:
                 raise HTTPException(status_code=500, detail=f"AI 응답 생성 실패: {str(e)}")
     
-    async def generate_response_async(self, messages: List[Dict[str, str]], user_context: Optional[Dict[str, Any]] = None) -> str:
+    async def generate_response_async(self, messages: List[Dict[str, Any]], user_context: Optional[Dict[str, Any]] = None) -> str:
         """
         사용자 메시지에 대한 AI 응답 생성 (비동기 방식)
         
@@ -153,7 +163,7 @@ class OpenAIService:
             else:
                 raise HTTPException(status_code=500, detail=f"AI 응답 생성 실패: {str(e)}")
     
-    def generate_response_stream(self, messages: List[Dict[str, str]], user_context: Optional[Dict[str, Any]] = None):
+    def generate_response_stream(self, messages: List[Dict[str, Any]], user_context: Optional[Dict[str, Any]] = None):
         """
         스트리밍 방식으로 AI 응답 생성
         
@@ -209,6 +219,10 @@ class OpenAIService:
         3. 학습에 도움이 되는 질문이나 설명을 해주세요
         4. 부적절한 내용은 정중히 거절하세요
         5. 한국어로 답변해주세요
+        6. 파일이 첨부된 경우, 해당 파일의 내용을 분석하고 구체적으로 답변하세요
+        7. 이미지가 첨부된 경우, 이미지의 내용을 자세히 설명하고 관련 질문에 답변하세요
+        8. 텍스트 파일이 첨부된 경우, 파일 내용을 읽고 분석하여 답변하세요
+        9. 파일을 "열거나 다운로드할 수 없다"고 답변하지 마세요 - 첨부된 파일은 이미 분석 가능한 상태입니다
         """
         
         if user_context:
@@ -252,6 +266,211 @@ class OpenAIService:
         ]
         
         return self.generate_response(messages)
+    
+    def upload_file(self, file_path: Union[str, Path], purpose: str = "assistants") -> FileObject:
+        """
+        파일을 OpenAI API에 업로드
+        
+        Args:
+            file_path: 업로드할 파일 경로
+            purpose: 파일 용도 (assistants, fine-tune, batch 등)
+            
+        Returns:
+            업로드된 파일 객체
+            
+        Raises:
+            HTTPException: 파일 업로드 실패 시
+        """
+        try:
+            file_path = Path(file_path)
+            
+            if not file_path.exists():
+                raise HTTPException(status_code=400, detail="파일이 존재하지 않습니다.")
+            
+            # 파일 업로드
+            with open(file_path, 'rb') as file:
+                uploaded_file = self.client.files.create(
+                    file=file,
+                    purpose=purpose
+                )
+            
+            print(f"✅ 파일 업로드 성공: {uploaded_file.id}")
+            return uploaded_file
+            
+        except Exception as e:
+            print(f"❌ 파일 업로드 실패: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"파일 업로드 실패: {str(e)}")
+    
+    def encode_image_to_base64(self, file_path: Union[str, Path]) -> str:
+        """
+        이미지 파일을 base64로 인코딩
+        
+        Args:
+            file_path: 이미지 파일 경로
+            
+        Returns:
+            base64 인코딩된 이미지 문자열
+        """
+        try:
+            with open(file_path, 'rb') as image_file:
+                return base64.b64encode(image_file.read()).decode('utf-8')
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"이미지 인코딩 실패: {str(e)}")
+    
+    def generate_response_with_files(
+        self, 
+        messages: List[Dict[str, Any]], 
+        files: Optional[List[UploadFile]] = None,
+        user_context: Optional[Dict[str, Any]] = None
+    ) -> str:
+        """
+        파일 첨부가 포함된 AI 응답 생성
+        
+        Args:
+            messages: 대화 히스토리
+            files: 첨부 파일 목록
+            user_context: 사용자 정보
+            
+        Returns:
+            AI 생성 응답 텍스트
+        """
+        try:
+            # 파일이 있는 경우 처리
+            if files:
+                processed_messages = self._process_files_in_messages(messages, files)
+            else:
+                processed_messages = messages
+            
+            # 기존 응답 생성 메서드 호출
+            return self.generate_response(processed_messages, user_context)
+            
+        except Exception as e:
+            print(f"❌ 파일 포함 응답 생성 실패: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"파일 포함 응답 생성 실패: {str(e)}")
+    
+    def _process_files_in_messages(self, messages: List[Dict[str, Any]], files: List[UploadFile]) -> List[Dict[str, Any]]:
+        """
+        메시지에 파일 정보를 포함시켜 처리
+        
+        Args:
+            messages: 원본 메시지 목록
+            files: 첨부 파일 목록
+            
+        Returns:
+            파일 정보가 포함된 메시지 목록
+        """
+        processed_messages = messages.copy()
+        
+        # 마지막 사용자 메시지에 파일 정보 추가
+        if processed_messages and processed_messages[-1].get('role') == 'user':
+            last_message = processed_messages[-1]
+            
+            # 텍스트 content를 배열 형태로 변환
+            if isinstance(last_message.get('content'), str):
+                text_content = last_message['content']
+                last_message['content'] = [
+                    {"type": "text", "text": text_content}
+                ]
+            
+            # 각 파일 처리
+            for file in files:
+                file_ext = Path(file.filename).suffix.lower()
+                
+                if file_ext in self.SUPPORTED_IMAGE_FORMATS:
+                    # 이미지 파일 처리
+                    file_content = file.file.read()
+                    file.file.seek(0)  # 파일 포인터 리셋
+                    
+                    # base64 인코딩
+                    encoded_image = base64.b64encode(file_content).decode('utf-8')
+                    
+                    # 이미지 타입 결정
+                    image_type = file_ext.lstrip('.')
+                    if image_type == 'jpg':
+                        image_type = 'jpeg'
+                    
+                    # 메시지에 이미지 추가
+                    last_message['content'].append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/{image_type};base64,{encoded_image}",
+                            "detail": "high"
+                        }
+                    })
+                    
+                elif file_ext in self.SUPPORTED_TEXT_FORMATS:
+                    # 텍스트 파일 처리
+                    file_content = file.file.read().decode('utf-8')
+                    file.file.seek(0)
+                    
+                    # 텍스트 내용을 메시지에 추가
+                    last_message['content'].append({
+                        "type": "text",
+                        "text": f"\n\n[파일: {file.filename}]\n{file_content}"
+                    })
+                    
+                elif file_ext in self.SUPPORTED_DOC_FORMATS:
+                    # 문서 파일의 경우 OpenAI Files API 사용
+                    # 임시 파일로 저장 후 업로드
+                    temp_file_path = f"/tmp/{file.filename}"
+                    with open(temp_file_path, 'wb') as temp_file:
+                        temp_file.write(file.file.read())
+                    
+                    # 파일 업로드
+                    uploaded_file = self.upload_file(temp_file_path)
+                    
+                    # 파일 정보를 메시지에 추가
+                    last_message['content'].append({
+                        "type": "text",
+                        "text": f"\n\n[첨부 파일: {file.filename} (ID: {uploaded_file.id})]"
+                    })
+                    
+                    # 임시 파일 삭제
+                    os.remove(temp_file_path)
+                    
+                else:
+                    # 지원하지 않는 파일 형식
+                    last_message['content'].append({
+                        "type": "text",
+                        "text": f"\n\n[지원하지 않는 파일 형식: {file.filename}]"
+                    })
+        
+        return processed_messages
+    
+    def get_file_content(self, file_id: str) -> str:
+        """
+        업로드된 파일의 내용을 가져오기
+        
+        Args:
+            file_id: 파일 ID
+            
+        Returns:
+            파일 내용 (텍스트)
+        """
+        try:
+            file_content = self.client.files.retrieve_content(file_id)
+            return file_content
+        except Exception as e:
+            print(f"❌ 파일 내용 조회 실패: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"파일 내용 조회 실패: {str(e)}")
+    
+    def delete_file(self, file_id: str) -> bool:
+        """
+        업로드된 파일 삭제
+        
+        Args:
+            file_id: 삭제할 파일 ID
+            
+        Returns:
+            삭제 성공 여부
+        """
+        try:
+            self.client.files.delete(file_id)
+            print(f"✅ 파일 삭제 성공: {file_id}")
+            return True
+        except Exception as e:
+            print(f"❌ 파일 삭제 실패: {str(e)}")
+            return False
     
     def __enter__(self):
         """컨텍스트 매니저 진입"""

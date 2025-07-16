@@ -271,6 +271,174 @@
   background: #94a3b8;
 }
 
+/* 파일 첨부 관련 스타일 */
+.file-attach-button {
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.file-attach-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.file-attach-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.attached-files {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: #f8fafc;
+}
+
+.attached-files-header {
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.attached-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.attached-file-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.file-icon {
+  font-size: 1rem;
+  color: #10b981;
+}
+
+.file-name {
+  flex: 1;
+  font-size: 0.9rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.file-size {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.remove-file-button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.remove-file-button:hover {
+  background-color: #fee2e2;
+}
+
+.message-attachments {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-size: 0.8rem;
+}
+
+.attachment-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.attachment-name {
+  font-weight: 500;
+}
+
+.attachment-size {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ai-message .message-attachments {
+  background-color: rgba(55, 48, 163, 0.1);
+}
+
+.ai-message .attachment-icon {
+  color: #3730a3;
+}
+
+.ai-message .attachment-name {
+  color: #3730a3;
+}
+
+.ai-message .attachment-size {
+  color: #6366f1;
+}
+
+/* 드래그 앤 드롭 관련 스타일 */
+.chat-input.dragging {
+  background-color: #f0f9ff;
+  border-color: #3b82f6;
+}
+
+.drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px dashed #3b82f6;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.drag-message {
+  background-color: white;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  color: #3b82f6;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.chat-input {
+  position: relative;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .chat-interface {
@@ -288,5 +456,18 @@
   
   .send-button {
     width: 100%;
+  }
+  
+  .attached-files {
+    padding: 0.75rem;
+  }
+  
+  .attached-file-item {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  
+  .file-name {
+    font-size: 0.8rem;
   }
 }

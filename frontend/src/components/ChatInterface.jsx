@@ -10,7 +10,10 @@ function ChatInterface() {
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [threadId, setThreadId] = useState(null)
+  const [attachedFiles, setAttachedFiles] = useState([])
+  const [isDragging, setIsDragging] = useState(false)
   const messagesEndRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   // 스크롤을 최하단으로 이동
   const scrollToBottom = () => {
@@ -31,22 +34,105 @@ function ChatInterface() {
     }
   }
 
+  // 파일 첨부 상태 초기화
+  const resetFileAttachments = () => {
+    setAttachedFiles([])
+    // 파일 입력 필드도 초기화
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  // 파일 첨부 관련 함수들
+  const handleFileSelect = (event) => {
+    const files = Array.from(event.target.files)
+    addFiles(files)
+  }
+
+  const addFiles = (files) => {
+    const validFiles = files.filter(file => {
+      // 파일 크기 제한 (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`파일 ${file.name}이 너무 큽니다. 10MB 이하의 파일만 첨부할 수 있습니다.`)
+        return false
+      }
+      
+      // 지원되는 파일 형식 확인
+      const supportedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+        'text/plain', 'text/csv', 'text/html', 'text/css', 'text/javascript',
+        'application/json', 'application/xml', 'text/xml',
+        'application/pdf'
+      ]
+      
+      const supportedExtensions = ['.txt', '.md', '.csv', '.html', '.css', '.js', '.json', '.xml', '.pdf']
+      
+      const isTypeSupported = supportedTypes.includes(file.type)
+      const isExtensionSupported = supportedExtensions.some(ext => file.name.toLowerCase().endsWith(ext))
+      
+      if (!isTypeSupported && !isExtensionSupported) {
+        alert(`파일 ${file.name}은 지원되지 않는 형식입니다.\n지원되는 형식: 이미지(jpg, png, gif, webp), 텍스트(txt, md, csv, html, css, js, json, xml), PDF`)
+        return false
+      }
+      
+      return true
+    })
+
+    if (validFiles.length > 0) {
+      setAttachedFiles(prev => {
+        // 중복 파일 제거 (이름과 크기로 비교)
+        const newFiles = validFiles.filter(newFile => 
+          !prev.some(existingFile => 
+            existingFile.name === newFile.name && existingFile.size === newFile.size
+          )
+        )
+        return [...prev, ...newFiles]
+      })
+    }
+  }
+
+  const removeFile = (index) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const files = Array.from(e.dataTransfer.files)
+    addFiles(files)
+  }
+
   // 메시지 전송
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return
+    if ((!inputMessage.trim() && attachedFiles.length === 0) || isLoading) return
 
     const messageText = inputMessage.trim()
     setInputMessage('')
     setIsLoading(true)
 
-    // 1. 사용자 메시지 즉시 렌더링
+    // 1. 사용자 메시지 즉시 렌더링 (파일 정보 포함)
     const userMessage = {
       id: Date.now(),
-      message: messageText,
+      message: messageText || (attachedFiles.length > 0 ? '파일을 첨부했습니다.' : ''),
       is_ai_response: false,
       user_name: user.name,
       user_type: user.user_type,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      attachments: attachedFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type
+      }))
     }
     
     // 사용자 메시지를 즉시 화면에 표시
@@ -67,17 +153,23 @@ function ChatInterface() {
     setMessages(prev => [...prev, aiMessage])
 
     try {
-      // 3. 스트리밍 API 호출
+      // 3. FormData로 파일과 메시지 준비
+      const formData = new FormData()
+      formData.append('message', messageText)
+      formData.append('user_id', user.id)
+      formData.append('session_id', user.session_id)
+      formData.append('user_name', user.name)
+      formData.append('user_type', user.user_type)
+      
+      // 파일 첨부
+      attachedFiles.forEach((file, index) => {
+        formData.append(`file_${index}`, file)
+      })
+
+      // 4. 스트리밍 API 호출
       const response = await fetch(`${API_BASE_URL}/chat/ai/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: messageText,
-          user_id: user.id,
-          session_id: user.session_id,
-          user_name: user.name,
-          user_type: user.user_type
-        })
+        body: formData
       })
 
       if (response.ok) {
@@ -129,6 +221,7 @@ function ChatInterface() {
       ))
     } finally {
       setIsLoading(false)
+      resetFileAttachments() // 전송 후 첨부파일 초기화
     }
   }
 
@@ -180,6 +273,7 @@ function ChatInterface() {
           <div className="empty-state">
             <p>👋 안녕하세요! 궁금한 것이 있으면 언제든지 물어보세요.</p>
             <p>🤖 AI가 교육적인 답변을 제공해드립니다.</p>
+            <p>📎 파일을 첨부하여 질문할 수도 있습니다.</p>
           </div>
         ) : (
           messages.map((message, index) => (
@@ -192,6 +286,19 @@ function ChatInterface() {
               </div>
               <div className="message-content">
                 {message.message}
+                {message.attachments && message.attachments.length > 0 && (
+                  <div className="message-attachments">
+                    {message.attachments.map((attachment, idx) => (
+                      <div key={idx} className="attachment-item">
+                        <span className="attachment-icon">📎</span>
+                        <span className="attachment-name">{attachment.name}</span>
+                        <span className="attachment-size">
+                          ({(attachment.size / 1024).toFixed(1)}KB)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))
@@ -209,27 +316,79 @@ function ChatInterface() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="chat-input">
+      <div 
+        className={`chat-input ${isDragging ? 'dragging' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* 파일 첨부 영역 */}
+        {attachedFiles.length > 0 && (
+          <div className="attached-files">
+            <div className="attached-files-header">
+              <span>첨부된 파일 ({attachedFiles.length})</span>
+            </div>
+            <div className="attached-files-list">
+              {attachedFiles.map((file, index) => (
+                <div key={index} className="attached-file-item">
+                  <span className="file-icon">📎</span>
+                  <span className="file-name">{file.name}</span>
+                  <span className="file-size">({(file.size / 1024).toFixed(1)}KB)</span>
+                  <button
+                    onClick={() => removeFile(index)}
+                    className="remove-file-button"
+                    title="파일 제거"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="input-container">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            multiple
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="file-attach-button"
+            disabled={isLoading}
+            title="파일 첨부"
+          >
+            📎
+          </button>
           <textarea
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="메시지를 입력하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
+            placeholder="메시지를 입력하거나 파일을 드래그하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
             rows="1"
             disabled={isLoading}
           />
           <button
             onClick={sendMessage}
-            disabled={isLoading || !inputMessage.trim()}
+            disabled={isLoading || (!inputMessage.trim() && attachedFiles.length === 0)}
             className="send-button"
           >
             {isLoading ? '전송 중...' : '전송'}
           </button>
         </div>
         <div className="input-hint">
-          💡 AI에게 궁금한 것을 물어보세요!
+          💡 AI에게 궁금한 것을 물어보세요! 파일을 첨부하여 질문할 수도 있습니다.
         </div>
+        {isDragging && (
+          <div className="drag-overlay">
+            <div className="drag-message">
+              📎 파일을 여기에 놓으세요
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
