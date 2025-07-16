@@ -66,9 +66,11 @@ function AuthenticatedApp({ authMode, setAuthMode }) {
   return (
     <div className="theme-recommend recommend-dashboard">
       <div className="recommend-dashboard__header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <h1 style={{ margin: 0 }}>AI 교육 대시보드</h1>
-          <ThemeSelector />
+        <div className="recommend-header-content">
+          <h1>AI 교육 대시보드</h1>
+          <div className="recommend-header-actions">
+            <ThemeSelector />
+          </div>
         </div>
       </div>
       {user.user_type === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}

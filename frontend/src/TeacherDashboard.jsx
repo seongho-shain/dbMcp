@@ -68,11 +68,17 @@ function TeacherDashboard() {
   return (
     <div className="recommend-dashboard__main">
       <div className="recommend-dashboard__header">
-        <h1>선생님 대시보드</h1>
-        <div className="recommend-badges">
-          <span className="recommend-badge">{user.name} 선생님 반갑습니다!</span>
+        <div className="recommend-header-content">
+          <div className="recommend-header-info">
+            <h1>선생님 대시보드</h1>
+            <div className="recommend-badges">
+              <span className="recommend-badge">{user.name} 선생님 반갑습니다!</span>
+            </div>
+          </div>
+          <div className="recommend-header-actions">
+            <button onClick={logout} className="recommend-btn recommend-btn--secondary">로그아웃</button>
+          </div>
         </div>
-        <button onClick={logout} className="recommend-btn recommend-btn--secondary">로그아웃</button>
       </div>
       
       <div className="recommend-dashboard__grid">

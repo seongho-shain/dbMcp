@@ -342,7 +342,7 @@ function ChatInterface() {
           </div>
         )}
 
-        <div className="recommend-input-wrapper">
+        <div className="recommend-chat-input-container">
           <input
             type="file"
             ref={fileInputRef}
@@ -358,24 +358,26 @@ function ChatInterface() {
           >
             📎
           </button>
-          <textarea
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="메시지를 입력하거나 파일을 드래그하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
-            rows="1"
-            disabled={isLoading}
-            className="recommend-input"
-            style={{ resize: 'vertical', minHeight: '3rem' }}
-          />
+          <div className="recommend-input-wrapper">
+            <textarea
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="메시지를 입력하거나 파일을 드래그하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
+              rows="1"
+              disabled={isLoading}
+              className="recommend-input"
+              style={{ resize: 'vertical', minHeight: '3rem' }}
+            />
+          </div>
+          <button
+            onClick={sendMessage}
+            disabled={isLoading || (!inputMessage.trim() && attachedFiles.length === 0)}
+            className="recommend-btn recommend-btn--primary"
+          >
+            {isLoading ? '전송 중...' : '전송'}
+          </button>
         </div>
-        <button
-          onClick={sendMessage}
-          disabled={isLoading || (!inputMessage.trim() && attachedFiles.length === 0)}
-          className="recommend-btn recommend-btn--primary"
-        >
-          {isLoading ? '전송 중...' : '전송'}
-        </button>
         
         {isDragging && (
           <div className="drag-overlay">
