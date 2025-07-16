@@ -259,40 +259,36 @@ function ChatInterface() {
   }, [messages])
 
   return (
-    <div className="chat-interface">
-      <div className="chat-header">
-        <h3>💬 AI 채팅</h3>
-        <div className="user-info">
-          {user.name} ({user.user_type === 'teacher' ? '선생님' : '학생'})
-          {threadId && <span className="thread-info">Thread #{threadId}</span>}
+    <div className="recommend-chat">
+      <div className="recommend-chat__header">
+        <h3>AI 채팅</h3>
+        <div className="recommend-chat__status">
+          <div className="recommend-status-dot"></div>
+          <span>{user.name} ({user.user_type === 'teacher' ? '선생님' : '학생'})</span>
+          {threadId && <span>Thread #{threadId}</span>}
         </div>
       </div>
 
-      <div className="chat-messages">
+      <div className="recommend-chat__messages">
         {messages.length === 0 ? (
-          <div className="empty-state">
-            <p>👋 안녕하세요! 궁금한 것이 있으면 언제든지 물어보세요.</p>
-            <p>🤖 AI가 교육적인 답변을 제공해드립니다.</p>
-            <p>📎 파일을 첨부하여 질문할 수도 있습니다.</p>
+          <div className="recommend-welcome">
+            <div className="recommend-welcome__icon">🤖</div>
+            <p>안녕하세요! 궁금한 것이 있으면 언제든지 물어보세요.</p>
+            <p>AI가 교육적인 답변을 제공해드립니다.</p>
+            <p>파일을 첨부하여 질문할 수도 있습니다.</p>
           </div>
         ) : (
           messages.map((message, index) => (
-            <div key={`${message.id}-${index}`} className={getMessageClass(message)}>
-              <div className="message-header">
-                <span className="sender-name">
-                  {message.is_ai_response ? '🤖 AI 어시스턴트' : `${message.user_name}`}
-                </span>
-                <span className="message-time">{formatTime(message.created_at)}</span>
-              </div>
-              <div className="message-content">
+            <div key={`${message.id}-${index}`} className={`recommend-message ${message.is_ai_response ? 'recommend-message--ai' : 'recommend-message--user'}`}>
+              <div className="recommend-message__content">
                 {message.message}
                 {message.attachments && message.attachments.length > 0 && (
-                  <div className="message-attachments">
+                  <div className="recommend-message__attachments">
                     {message.attachments.map((attachment, idx) => (
-                      <div key={idx} className="attachment-item">
-                        <span className="attachment-icon">📎</span>
-                        <span className="attachment-name">{attachment.name}</span>
-                        <span className="attachment-size">
+                      <div key={idx} className="recommend-attachment">
+                        <span className="recommend-attachment__icon">📎</span>
+                        <span className="recommend-attachment__name">{attachment.name}</span>
+                        <span className="recommend-attachment__size">
                           ({(attachment.size / 1024).toFixed(1)}KB)
                         </span>
                       </div>
@@ -300,43 +296,42 @@ function ChatInterface() {
                   </div>
                 )}
               </div>
+              <div className="recommend-message__timestamp">{formatTime(message.created_at)}</div>
             </div>
           ))
         )}
         {isLoading && (
-          <div className="loading-indicator">
-            <div className="loading-dots">
-              <span></span>
-              <span></span>
-              <span></span>
+          <div className="recommend-message recommend-message--ai">
+            <div className="recommend-message__content">
+              <span>AI가 답변을 준비중입니다...</span>
             </div>
-            <span>AI가 답변을 준비중입니다...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       <div 
-        className={`chat-input ${isDragging ? 'dragging' : ''}`}
+        className={`recommend-chat__input ${isDragging ? 'dragging' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         {/* 파일 첨부 영역 */}
         {attachedFiles.length > 0 && (
-          <div className="attached-files">
-            <div className="attached-files-header">
-              <span>첨부된 파일 ({attachedFiles.length})</span>
+          <div className="recommend-message__attachments" style={{ marginBottom: 'var(--recommend-spacing-md)' }}>
+            <div style={{ fontWeight: '500', marginBottom: 'var(--recommend-spacing-sm)' }}>
+              첨부된 파일 ({attachedFiles.length})
             </div>
-            <div className="attached-files-list">
+            <div>
               {attachedFiles.map((file, index) => (
-                <div key={index} className="attached-file-item">
-                  <span className="file-icon">📎</span>
-                  <span className="file-name">{file.name}</span>
-                  <span className="file-size">({(file.size / 1024).toFixed(1)}KB)</span>
+                <div key={index} className="recommend-attachment">
+                  <span className="recommend-attachment__icon">📎</span>
+                  <span className="recommend-attachment__name">{file.name}</span>
+                  <span className="recommend-attachment__size">({(file.size / 1024).toFixed(1)}KB)</span>
                   <button
                     onClick={() => removeFile(index)}
-                    className="remove-file-button"
+                    className="recommend-btn recommend-btn--secondary"
+                    style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
                     title="파일 제거"
                   >
                     ×
@@ -347,7 +342,7 @@ function ChatInterface() {
           </div>
         )}
 
-        <div className="input-container">
+        <div className="recommend-input-wrapper">
           <input
             type="file"
             ref={fileInputRef}
@@ -357,7 +352,7 @@ function ChatInterface() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="file-attach-button"
+            className="recommend-attach-btn"
             disabled={isLoading}
             title="파일 첨부"
           >
@@ -370,18 +365,18 @@ function ChatInterface() {
             placeholder="메시지를 입력하거나 파일을 드래그하세요... (Enter: 전송, Shift+Enter: 줄바꿈)"
             rows="1"
             disabled={isLoading}
+            className="recommend-input"
+            style={{ resize: 'vertical', minHeight: '3rem' }}
           />
-          <button
-            onClick={sendMessage}
-            disabled={isLoading || (!inputMessage.trim() && attachedFiles.length === 0)}
-            className="send-button"
-          >
-            {isLoading ? '전송 중...' : '전송'}
-          </button>
         </div>
-        <div className="input-hint">
-          💡 AI에게 궁금한 것을 물어보세요! 파일을 첨부하여 질문할 수도 있습니다.
-        </div>
+        <button
+          onClick={sendMessage}
+          disabled={isLoading || (!inputMessage.trim() && attachedFiles.length === 0)}
+          className="recommend-btn recommend-btn--primary"
+        >
+          {isLoading ? '전송 중...' : '전송'}
+        </button>
+        
         {isDragging && (
           <div className="drag-overlay">
             <div className="drag-message">

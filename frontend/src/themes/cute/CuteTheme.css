@@ -1,0 +1,564 @@
+/* Cute Theme - 귀엽고 친근한 파스텔 디자인 */
+
+/* 테마 변수 */
+.theme-cute {
+  --cute-bg-primary: #f0f8ff;
+  --cute-bg-secondary: #e6f3ff;
+  --cute-bg-tertiary: #ddeeff;
+  --cute-bg-soft: #f5faff;
+  
+  --cute-text-primary: #0a2744;
+  --cute-text-secondary: #1e4a66;
+  --cute-text-muted: #4a7088;
+  
+  --cute-celestial-blue: #1e91d6;
+  --cute-french-blue: #0072bb;
+  --cute-yellow-green: #8fc93a;
+  --cute-citrine: #e4cc37;
+  --cute-caramel: #e18335;
+  
+  --cute-blue-light: rgba(30, 145, 214, 0.1);
+  --cute-blue-medium: rgba(30, 145, 214, 0.6);
+  --cute-blue-dark: var(--cute-celestial-blue);
+  
+  --cute-green-light: rgba(143, 201, 58, 0.1);
+  --cute-green-medium: rgba(143, 201, 58, 0.6);
+  --cute-green-dark: var(--cute-yellow-green);
+  
+  --cute-yellow-light: rgba(228, 204, 55, 0.1);
+  --cute-yellow-medium: rgba(228, 204, 55, 0.6);
+  --cute-yellow-dark: var(--cute-citrine);
+  
+  --cute-gradient-primary: linear-gradient(135deg, var(--cute-celestial-blue) 0%, var(--cute-french-blue) 100%);
+  --cute-gradient-secondary: linear-gradient(135deg, var(--cute-yellow-green) 0%, var(--cute-citrine) 100%);
+  --cute-gradient-warm: linear-gradient(135deg, var(--cute-caramel) 0%, var(--cute-citrine) 100%);
+  --cute-gradient-rainbow: linear-gradient(45deg, var(--cute-celestial-blue), var(--cute-french-blue), var(--cute-yellow-green), var(--cute-citrine), var(--cute-caramel));
+  
+  --cute-shadow-soft: 0 4px 15px rgba(30, 145, 214, 0.15);
+  --cute-shadow-medium: 0 6px 20px rgba(30, 145, 214, 0.2);
+  --cute-shadow-glow: 0 0 20px rgba(30, 145, 214, 0.3);
+  
+  --cute-border-radius: 20px;
+  --cute-border-radius-sm: 15px;
+  --cute-border-radius-lg: 30px;
+  --cute-border-radius-xl: 50px;
+  
+  --cute-transition: all 0.3s ease;
+  --cute-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* 기본 레이아웃 */
+.cute-dashboard {
+  background: var(--cute-bg-primary);
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(30, 145, 214, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(143, 201, 58, 0.1) 0%, transparent 50%);
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: 'Comic Sans MS', cursive, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--cute-text-primary);
+}
+
+.cute-dashboard__header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: var(--cute-gradient-primary);
+  border-radius: var(--cute-border-radius-lg);
+  box-shadow: var(--cute-shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.cute-dashboard__header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.1) 10px,
+    rgba(255, 255, 255, 0.1) 20px
+  );
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%); }
+  100% { transform: translateX(100%) translateY(100%); }
+}
+
+.cute-dashboard__header h2 {
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+  color: var(--cute-text-primary);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.cute-dashboard__header p {
+  font-size: 1.2rem;
+  color: var(--cute-text-secondary);
+  margin: 0 0 1rem 0;
+  position: relative;
+  z-index: 1;
+}
+
+.cute-decorations {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.cute-star, .cute-heart, .cute-flower {
+  font-size: 2rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.cute-heart {
+  animation-delay: 0.5s;
+}
+
+.cute-flower {
+  animation-delay: 1s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.cute-dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 3rem;
+}
+
+/* 카드 컴포넌트 */
+.cute-card {
+  background: var(--cute-bg-secondary);
+  border-radius: var(--cute-border-radius);
+  padding: 2rem;
+  box-shadow: var(--cute-shadow-soft);
+  transition: var(--cute-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.cute-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--cute-gradient-warm);
+}
+
+.cute-card:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: var(--cute-shadow-medium);
+}
+
+.cute-card__header {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--cute-text-primary);
+}
+
+.cute-card__content {
+  color: var(--cute-text-secondary);
+}
+
+/* 통계 컴포넌트 */
+.cute-stats {
+  display: flex;
+  gap: 2rem;
+  justify-content: space-around;
+}
+
+.cute-stat {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--cute-bg-tertiary);
+  border-radius: var(--cute-border-radius-sm);
+  box-shadow: var(--cute-shadow-soft);
+  transition: var(--cute-transition);
+}
+
+.cute-stat:hover {
+  transform: scale(1.05);
+  animation: bounce 0.6s var(--cute-bounce);
+}
+
+@keyframes bounce {
+  0%, 20%, 60%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  80% { transform: translateY(-5px); }
+}
+
+.cute-stat__icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.cute-stat__value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--cute-celestial-blue);
+  margin-bottom: 0.5rem;
+}
+
+.cute-stat__label {
+  font-size: 0.9rem;
+  color: var(--cute-text-muted);
+}
+
+/* 기능 목록 */
+.cute-features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cute-feature {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--cute-bg-soft);
+  border-radius: var(--cute-border-radius-sm);
+  transition: var(--cute-transition);
+}
+
+.cute-feature:hover {
+  background: var(--cute-blue-light);
+  transform: translateX(10px);
+}
+
+.cute-feature__icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cute-gradient-rainbow);
+  border-radius: var(--cute-border-radius-xl);
+  box-shadow: var(--cute-shadow-soft);
+}
+
+/* 선물 상자 */
+.cute-gift {
+  text-align: center;
+  padding: 1rem;
+}
+
+.cute-gift__box {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: wiggle 2s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+.cute-gift p {
+  margin-bottom: 1rem;
+  color: var(--cute-text-secondary);
+}
+
+/* 버튼 컴포넌트 */
+.cute-btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: var(--cute-border-radius-lg);
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--cute-transition);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--cute-shadow-soft);
+}
+
+.cute-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.cute-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.cute-btn--primary {
+  background: var(--cute-gradient-warm);
+  color: var(--cute-text-primary);
+}
+
+.cute-btn--primary:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--cute-shadow-medium);
+}
+
+.cute-btn--secondary {
+  background: var(--cute-gradient-secondary);
+  color: var(--cute-text-primary);
+}
+
+.cute-btn--secondary:hover {
+  transform: scale(1.05);
+  box-shadow: var(--cute-shadow-medium);
+}
+
+/* 입력 필드 */
+.cute-input-group {
+  position: relative;
+}
+
+.cute-input {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: var(--cute-bg-soft);
+  border: 2px solid var(--cute-pink-light);
+  border-radius: var(--cute-border-radius-lg);
+  color: var(--cute-text-primary);
+  font-size: 1rem;
+  transition: var(--cute-transition);
+  box-shadow: var(--cute-shadow-soft);
+}
+
+.cute-input:focus {
+  outline: none;
+  border-color: var(--cute-celestial-blue);
+  box-shadow: var(--cute-shadow-glow);
+  transform: scale(1.02);
+}
+
+.cute-input::placeholder {
+  color: var(--cute-text-muted);
+}
+
+/* 채팅 인터페이스 */
+.cute-chat {
+  background: var(--cute-bg-secondary);
+  border-radius: var(--cute-border-radius);
+  box-shadow: var(--cute-shadow-soft);
+  overflow: hidden;
+  border: 3px solid var(--cute-pink-light);
+}
+
+.cute-chat__header {
+  padding: 1.5rem;
+  background: var(--cute-gradient-primary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cute-chat__header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--cute-text-primary);
+}
+
+.cute-chat__mood {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--cute-text-secondary);
+  font-size: 0.9rem;
+}
+
+.cute-mood-icon {
+  font-size: 1.2rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.cute-chat__messages {
+  padding: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cute-message {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.cute-message--user {
+  flex-direction: row-reverse;
+}
+
+.cute-message__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--cute-border-radius-xl);
+  background: var(--cute-gradient-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: var(--cute-shadow-soft);
+  flex-shrink: 0;
+}
+
+.cute-message__bubble {
+  max-width: 70%;
+  position: relative;
+}
+
+.cute-message__content {
+  padding: 1rem 1.5rem;
+  border-radius: var(--cute-border-radius-sm);
+  position: relative;
+  box-shadow: var(--cute-shadow-soft);
+}
+
+.cute-message--user .cute-message__content {
+  background: var(--cute-gradient-warm);
+  color: var(--cute-text-primary);
+}
+
+.cute-message--ai .cute-message__content {
+  background: var(--cute-bg-soft);
+  color: var(--cute-text-primary);
+}
+
+.cute-message__content::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.cute-message--user .cute-message__content::before {
+  right: -10px;
+  top: 15px;
+  border-width: 10px 0 10px 10px;
+  border-color: transparent transparent transparent var(--cute-caramel);
+}
+
+.cute-message--ai .cute-message__content::before {
+  left: -10px;
+  top: 15px;
+  border-width: 10px 10px 10px 0;
+  border-color: transparent var(--cute-bg-soft) transparent transparent;
+}
+
+.cute-message__timestamp {
+  font-size: 0.7rem;
+  color: var(--cute-text-muted);
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.cute-message--user .cute-message__timestamp {
+  text-align: left;
+}
+
+.cute-chat__input {
+  padding: 1.5rem;
+  background: var(--cute-bg-tertiary);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.cute-chat__input .cute-input {
+  flex: 1;
+}
+
+/* 스크롤바 스타일링 */
+.cute-chat__messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cute-chat__messages::-webkit-scrollbar-track {
+  background: var(--cute-bg-soft);
+  border-radius: var(--cute-border-radius-sm);
+}
+
+.cute-chat__messages::-webkit-scrollbar-thumb {
+  background: var(--cute-celestial-blue);
+  border-radius: var(--cute-border-radius-sm);
+}
+
+.cute-chat__messages::-webkit-scrollbar-thumb:hover {
+  background: var(--cute-french-blue);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .cute-dashboard {
+    padding: 1rem;
+  }
+  
+  .cute-dashboard__grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .cute-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .cute-chat__input {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .cute-chat__input .cute-input {
+    width: 100%;
+  }
+  
+  .cute-btn {
+    width: 100%;
+  }
+  
+  .cute-message__bubble {
+    max-width: 85%;
+  }
+  
+  .cute-decorations {
+    gap: 1rem;
+  }
+  
+  .cute-star, .cute-heart, .cute-flower {
+    font-size: 1.5rem;
+  }
+}

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
+import ThemeSelector from './components/ThemeSelector'
 import TeacherLogin from './TeacherLogin'
 import StudentLogin from './StudentLogin'
 import TeacherSignup from './TeacherSignup'
@@ -11,9 +13,11 @@ function App() {
   const [authMode, setAuthMode] = useState('student') // 'student', 'teacher', 'signup'
   
   return (
-    <AuthProvider>
-      <AuthenticatedApp authMode={authMode} setAuthMode={setAuthMode} />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthenticatedApp authMode={authMode} setAuthMode={setAuthMode} />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 
@@ -21,45 +25,55 @@ function AuthenticatedApp({ authMode, setAuthMode }) {
   const { user, loading } = useAuth()
   
   if (loading) {
-    return <div className="loading">Loading...</div>
+    return <div className="theme-recommend recommend-dashboard">
+      <div className="loading">Loading...</div>
+    </div>
   }
   
   if (!user) {
     return (
-      <div className="auth-container">
-        <div className="auth-mode-selector">
-          <button 
-            className={authMode === 'student' ? 'active' : ''}
-            onClick={() => setAuthMode('student')}
-          >
-            학생 로그인
-          </button>
-          <button 
-            className={authMode === 'teacher' ? 'active' : ''}
-            onClick={() => setAuthMode('teacher')}
-          >
-            선생님 로그인
-          </button>
-          <button 
-            className={authMode === 'signup' ? 'active' : ''}
-            onClick={() => setAuthMode('signup')}
-          >
-            선생님 회원가입
-          </button>
+      <div className="theme-recommend recommend-dashboard">
+        <div className="auth-container">
+          <div className="auth-mode-selector">
+            <button 
+              className={`recommend-btn ${authMode === 'student' ? 'recommend-btn--primary' : 'recommend-btn--secondary'}`}
+              onClick={() => setAuthMode('student')}
+            >
+              학생 로그인
+            </button>
+            <button 
+              className={`recommend-btn ${authMode === 'teacher' ? 'recommend-btn--primary' : 'recommend-btn--secondary'}`}
+              onClick={() => setAuthMode('teacher')}
+            >
+              선생님 로그인
+            </button>
+            <button 
+              className={`recommend-btn ${authMode === 'signup' ? 'recommend-btn--primary' : 'recommend-btn--secondary'}`}
+              onClick={() => setAuthMode('signup')}
+            >
+              선생님 회원가입
+            </button>
+          </div>
+          
+          {authMode === 'student' && <StudentLogin />}
+          {authMode === 'teacher' && <TeacherLogin />}
+          {authMode === 'signup' && <TeacherSignup onSuccess={() => setAuthMode('teacher')} />}
         </div>
-        
-        {authMode === 'student' && <StudentLogin />}
-        {authMode === 'teacher' && <TeacherLogin />}
-        {authMode === 'signup' && <TeacherSignup onSuccess={() => setAuthMode('teacher')} />}
       </div>
     )
   }
   
-  if (user.user_type === 'teacher') {
-    return <TeacherDashboard />
-  } else {
-    return <StudentDashboard />
-  }
+  return (
+    <div className="theme-recommend recommend-dashboard">
+      <div className="recommend-dashboard__header">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <h1 style={{ margin: 0 }}>AI 교육 대시보드</h1>
+          <ThemeSelector />
+        </div>
+      </div>
+      {user.user_type === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}
+    </div>
+  )
 }
 
 export default App

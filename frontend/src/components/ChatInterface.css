@@ -273,14 +273,14 @@
 
 /* 파일 첨부 관련 스타일 */
 .file-attach-button {
-  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  background: var(--recommend-gradient-secondary, linear-gradient(135deg, #10b981 0%, #047857 100%));
   color: white;
   border: none;
   padding: 0.75rem;
-  border-radius: 12px;
+  border-radius: var(--recommend-border-radius, 12px);
   cursor: pointer;
   font-size: 1rem;
-  transition: all 0.2s ease;
+  transition: var(--recommend-transition, all 0.2s ease);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -407,8 +407,8 @@
 
 /* 드래그 앤 드롭 관련 스타일 */
 .chat-input.dragging {
-  background-color: #f0f9ff;
-  border-color: #3b82f6;
+  background-color: var(--recommend-blue-50, #f0f9ff);
+  border-color: var(--recommend-celestial-blue, #3b82f6);
 }
 
 .drag-overlay {
@@ -417,9 +417,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(59, 130, 246, 0.1);
-  border: 2px dashed #3b82f6;
-  border-radius: 12px;
+  background-color: var(--recommend-blue-50, rgba(59, 130, 246, 0.1));
+  border: 2px dashed var(--recommend-celestial-blue, #3b82f6);
+  border-radius: var(--recommend-border-radius-md, 12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -427,12 +427,12 @@
 }
 
 .drag-message {
-  background-color: white;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  color: #3b82f6;
+  background-color: var(--recommend-bg-primary, white);
+  padding: var(--recommend-spacing-md, 1rem) var(--recommend-spacing-xl, 2rem);
+  border-radius: var(--recommend-border-radius, 8px);
+  color: var(--recommend-celestial-blue, #3b82f6);
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  box-shadow: var(--recommend-shadow-md, 0 4px 12px rgba(59, 130, 246, 0.2));
 }
 
 .chat-input {

@@ -1,3 +1,6 @@
+/* Import Recommend theme styles */
+@import './themes/recommend/RecommendTheme.css';
+
 .app {
   min-height: 100vh;
   background-color: #f5f5f5;
@@ -47,33 +50,14 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #f8f9fa;
+  background: var(--recommend-bg-primary, #f8f9fa);
+  padding: var(--recommend-spacing-2xl, 2rem);
 }
 
 .auth-mode-selector {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.auth-mode-selector button {
-  padding: 0.8rem 1.5rem;
-  border: 2px solid #ddd;
-  background-color: white;
-  cursor: pointer;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.auth-mode-selector button:hover {
-  background-color: #f0f0f0;
-}
-
-.auth-mode-selector button.active {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+  gap: var(--recommend-spacing-md, 1rem);
+  margin-bottom: var(--recommend-spacing-2xl, 2rem);
 }
 
 .dashboard-content {
@@ -203,7 +187,8 @@
   align-items: center;
   min-height: 100vh;
   font-size: 1.2rem;
-  color: #666;
+  color: var(--recommend-text-secondary, #666);
+  background: var(--recommend-bg-primary, #ffffff);
 }
 
 button {
