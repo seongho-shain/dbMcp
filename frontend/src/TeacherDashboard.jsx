@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
+import ChatInterface from './components/ChatInterface'
 import './App.css'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -9,6 +10,7 @@ function TeacherDashboard() {
   const [students, setStudents] = useState({})
   const [loading, setLoading] = useState(false)
   const [creatingClass, setCreatingClass] = useState(false)
+  const [selectedSession, setSelectedSession] = useState(null)
   const { user, logout } = useAuth()
 
   const fetchSessions = async () => {
@@ -89,34 +91,60 @@ function TeacherDashboard() {
 
         {loading && <p>로딩 중...</p>}
 
-        <div className="sessions-section">
-          <h2>내 클래스 세션</h2>
-          {sessions.length === 0 && !loading ? (
-            <p>생성된 클래스가 없습니다. 새 클래스를 생성해보세요!</p>
-          ) : (
-            <div className="sessions-grid">
-              {sessions.map((session) => (
-                <div key={session.id} className="session-card">
-                  <h3>클래스 코드: {session.class_code}</h3>
-                  <p>생성일: {new Date(session.created_at).toLocaleString()}</p>
-                  <p>만료일: {session.expires_at ? new Date(session.expires_at).toLocaleString() : '없음'}</p>
-                  
-                  <div className="students-section">
-                    <h4>참여 학생 ({students[session.id]?.length || 0}명)</h4>
-                    {students[session.id]?.length > 0 ? (
-                      <ul className="students-list">
-                        {students[session.id].map((student) => (
-                          <li key={student.id}>
-                            {student.name} (참여: {new Date(student.created_at).toLocaleString()})
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>참여한 학생이 없습니다.</p>
-                    )}
+        <div className="main-content">
+          <div className="sessions-section">
+            <h2>내 클래스 세션</h2>
+            {sessions.length === 0 && !loading ? (
+              <p>생성된 클래스가 없습니다. 새 클래스를 생성해보세요!</p>
+            ) : (
+              <div className="sessions-grid">
+                {sessions.map((session) => (
+                  <div key={session.id} className="session-card">
+                    <h3>클래스 코드: {session.class_code}</h3>
+                    <p>생성일: {new Date(session.created_at).toLocaleString()}</p>
+                    <p>만료일: {session.expires_at ? new Date(session.expires_at).toLocaleString() : '없음'}</p>
+                    
+                    <div className="students-section">
+                      <h4>참여 학생 ({students[session.id]?.length || 0}명)</h4>
+                      {students[session.id]?.length > 0 ? (
+                        <ul className="students-list">
+                          {students[session.id].map((student) => (
+                            <li key={student.id}>
+                              {student.name} (참여: {new Date(student.created_at).toLocaleString()})
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>참여한 학생이 없습니다.</p>
+                      )}
+                    </div>
+                    
+                    <div className="session-actions">
+                      <button 
+                        onClick={() => setSelectedSession(session)}
+                        className="chat-button"
+                      >
+                        💬 AI 채팅
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {selectedSession && (
+            <div className="chat-section">
+              <div className="chat-header-info">
+                <h3>AI 채팅 - {selectedSession.class_code}</h3>
+                <button 
+                  onClick={() => setSelectedSession(null)}
+                  className="close-chat-button"
+                >
+                  ✕
+                </button>
+              </div>
+              <ChatInterface />
             </div>
           )}
         </div>

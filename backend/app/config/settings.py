@@ -5,6 +5,10 @@ MVC 패턴에서 설정 정보를 분리하여 관리
 """
 import os
 from typing import Dict, Any
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
 
 # Supabase 설정
 SUPABASE_URL = "https://etpqutdudxszedkkrjam.supabase.co"
@@ -25,6 +29,10 @@ SESSION_EXPIRE_HOURS = 24  # 클래스 세션 만료 시간 (24시간)
 
 # 클래스 코드 설정
 CLASS_CODE_LENGTH = 6  # 클래스 코드 길이
+
+# OpenAI API 설정
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = "gpt-4o-mini"  # 사용할 모델 (최신 모델)
 
 def get_supabase_headers() -> Dict[str, Any]:
     """

@@ -1,4 +1,5 @@
 import { useAuth } from './AuthContext'
+import ChatInterface from './components/ChatInterface'
 import './App.css'
 
 function StudentDashboard() {
@@ -25,8 +26,12 @@ function StudentDashboard() {
           
           <div className="student-actions">
             <p>클래스에 성공적으로 참여했습니다!</p>
-            <p>선생님의 안내를 기다려주세요.</p>
+            <p>아래 채팅창에서 AI와 1:1 대화를 나누어보세요.</p>
           </div>
+        </div>
+        
+        <div className="chat-section">
+          <ChatInterface />
         </div>
       </div>
     </div>

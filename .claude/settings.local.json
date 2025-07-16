@@ -11,7 +11,16 @@
       "mcp__supabase__execute_sql",
       "mcp__supabase__get_advisors",
       "Bash(rm:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:github.com)",
+      "mcp__Context7__resolve-library-id",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs",
+      "Bash(python -m pytest -xvs)",
+      "Bash(python3:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

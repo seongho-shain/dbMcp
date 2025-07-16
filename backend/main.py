@@ -29,7 +29,7 @@ from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.settings import CORS_ORIGINS, SERVER_HOST, SERVER_PORT
-from app.views import main_routes, teacher_routes, student_routes
+from app.views import main_routes, teacher_routes, student_routes, chat_routes
 
 # FastAPI 애플리케이션 인스턴스 생성
 app = FastAPI(
@@ -53,6 +53,7 @@ app.add_middleware(
 app.include_router(main_routes.router)      # 메인 라우트 (/, /health)
 app.include_router(teacher_routes.router)   # 선생님 관련 라우트 (/teacher/*)
 app.include_router(student_routes.router)   # 학생 관련 라우트 (/student/*)
+app.include_router(chat_routes.router)      # 채팅 관련 라우트 (/chat/*)
 
 # 세션 관련 라우트 별도 등록 (기존 API 호환성 유지)
 # /session/{session_id}/students 경로를 위한 추가 라우터

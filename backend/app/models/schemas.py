@@ -72,3 +72,25 @@ class CreateClassResponse(BaseModel):
     """클래스 생성 응답 데이터"""
     class_code: str
     session: ClassSessionResponse
+
+
+# 채팅 관련 스키마
+class ChatMessageRequest(BaseModel):
+    """채팅 메시지 요청 데이터"""
+    session_id: int
+    user_id: int
+    user_type: str
+    user_name: str
+    message: str
+
+
+class ChatMessageResponse(BaseModel):
+    """채팅 메시지 응답 데이터"""
+    id: int
+    session_id: int
+    user_id: int
+    user_type: str
+    user_name: str
+    message: str
+    is_ai_response: bool
+    created_at: str
