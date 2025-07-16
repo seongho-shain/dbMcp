@@ -39,7 +39,21 @@ function ChatInterface() {
     setInputMessage('')
     setIsLoading(true)
 
+    // 1. 사용자 메시지 즉시 렌더링
+    const userMessage = {
+      id: Date.now(),
+      message: messageText,
+      is_ai_response: false,
+      user_name: user.name,
+      user_type: user.user_type,
+      created_at: new Date().toISOString()
+    }
+    
+    // 사용자 메시지를 즉시 화면에 표시
+    setMessages(prev => [...prev, userMessage])
+
     try {
+      // 2. API 호출
       const response = await fetch(`${API_BASE_URL}/chat/ai`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,8 +72,17 @@ function ChatInterface() {
         // 스레드 ID 설정
         setThreadId(data.thread_id)
         
-        // 사용자 메시지와 AI 응답 추가
-        setMessages(prev => [...prev, data.user_message, data.ai_message])
+        // 3. AI 응답을 나중에 추가 (사용자 메시지는 이미 표시됨)
+        const aiMessage = {
+          id: data.ai_message.id || Date.now() + 1,
+          message: data.response,
+          is_ai_response: true,
+          user_name: 'AI 어시스턴트',
+          user_type: 'ai',
+          created_at: data.ai_message.created_at || new Date().toISOString()
+        }
+        
+        setMessages(prev => [...prev, aiMessage])
       } else {
         throw new Error('AI 응답 실패')
       }
@@ -68,7 +91,7 @@ function ChatInterface() {
       
       // 에러 메시지 표시
       const errorMessage = {
-        id: Date.now(),
+        id: Date.now() + 1,
         message: '죄송합니다. 현재 AI 서비스를 이용할 수 없습니다.',
         is_ai_response: true,
         user_name: 'AI 어시스턴트',

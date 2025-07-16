@@ -20,7 +20,9 @@
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
       "Bash(python -m pytest -xvs)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(python -m pytest --version)",
+      "Bash(ls:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
