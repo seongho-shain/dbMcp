@@ -33,6 +33,120 @@ class ChatHistoryResponse(BaseModel):
     messages: List[Dict[str, Any]]
     status: str = "success"
 
+@router.post("/chat/ai/stream")
+async def chat_with_ai_stream(request: ChatRequest):
+    """
+    AI와 스트리밍 방식 1:1 채팅
+    사용자별로 대화 기록이 유지되며, 응답을 실시간으로 스트리밍
+    """
+    from fastapi.responses import StreamingResponse
+    import json
+    
+    db_service = DatabaseService()
+    thread_id = None
+    previous_messages = []
+    
+    # 1. 데이터베이스 스레드 조회 시도 (실패해도 계속 진행)
+    try:
+        thread = db_service.get_or_create_chat_thread(request.user_id, request.session_id)
+        thread_id = thread["id"]
+        
+        # 기존 대화 기록 조회 시도
+        previous_messages = db_service.get_thread_messages(thread_id, limit=20)
+        print(f"✅ DB 연결 성공: Thread {thread_id}, 메시지 {len(previous_messages)}개")
+        
+    except Exception as e:
+        print(f"⚠️ DB 연결 실패, 대화 기록 없이 진행: {str(e)}")
+        thread_id = 0  # 임시 thread_id
+        previous_messages = []
+    
+    # 2. OpenAI API 형식으로 변환
+    openai_messages = []
+    for msg in previous_messages:
+        role = "assistant" if msg["is_ai_response"] else "user"
+        openai_messages.append({
+            "role": role,
+            "content": msg["message"]
+        })
+    
+    # 현재 메시지 추가
+    openai_messages.append({
+        "role": "user",
+        "content": request.message
+    })
+    
+    # 3. 사용자 컨텍스트 구성
+    user_context = {
+        "user_type": request.user_type,
+        "user_name": request.user_name,
+        "user_id": request.user_id
+    }
+    
+    # 4. 스트리밍 응답 생성 함수
+    async def generate_streaming_response():
+        try:
+            openai_service = OpenAIService()
+            collected_response = ""
+            
+            # 스트리밍 응답 생성
+            for chunk in openai_service.generate_response_stream(openai_messages, user_context):
+                if chunk and chunk.strip():
+                    collected_response += chunk
+                    # Server-Sent Events 형식으로 청크 전송
+                    yield f"data: {json.dumps({'type': 'chunk', 'content': chunk})}\n\n"
+            
+            # 최종 응답을 데이터베이스에 저장
+            if thread_id and thread_id > 0:
+                try:
+                    # 사용자 메시지 저장
+                    user_message_data = {
+                        "thread_id": thread_id,
+                        "user_id": request.user_id,
+                        "user_name": request.user_name,
+                        "user_type": request.user_type,
+                        "message": request.message,
+                        "is_ai_response": False,
+                        "created_at": datetime.now().isoformat()
+                    }
+                    
+                    db_service.create_thread_message(user_message_data)
+                    
+                    # AI 응답 저장
+                    ai_message_data = {
+                        "thread_id": thread_id,
+                        "user_id": 0,  # AI는 user_id 0
+                        "user_name": "AI 어시스턴트",
+                        "user_type": "ai",
+                        "message": collected_response,
+                        "is_ai_response": True,
+                        "created_at": datetime.now().isoformat()
+                    }
+                    
+                    db_service.create_thread_message(ai_message_data)
+                    print(f"✅ 메시지 저장 성공")
+                    
+                except Exception as e:
+                    print(f"⚠️ 메시지 저장 실패: {str(e)}")
+            
+            # 스트리밍 완료 신호
+            yield f"data: {json.dumps({'type': 'done', 'thread_id': thread_id})}\n\n"
+            
+        except Exception as e:
+            print(f"❌ 스트리밍 오류: {str(e)}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+    
+    return StreamingResponse(
+        generate_streaming_response(),
+        media_type="text/plain",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+        }
+    )
+
 @router.post("/chat/ai", response_model=ChatResponse)
 async def chat_with_ai(request: ChatRequest):
     """

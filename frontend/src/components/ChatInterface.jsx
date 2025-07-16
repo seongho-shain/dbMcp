@@ -52,9 +52,23 @@ function ChatInterface() {
     // 사용자 메시지를 즉시 화면에 표시
     setMessages(prev => [...prev, userMessage])
 
+    // 2. AI 응답을 위한 임시 메시지 생성
+    const aiMessageId = Date.now() + 1
+    const aiMessage = {
+      id: aiMessageId,
+      message: '',
+      is_ai_response: true,
+      user_name: 'AI 어시스턴트',
+      user_type: 'ai',
+      created_at: new Date().toISOString()
+    }
+    
+    // AI 메시지를 빈 상태로 미리 추가
+    setMessages(prev => [...prev, aiMessage])
+
     try {
-      // 2. API 호출
-      const response = await fetch(`${API_BASE_URL}/chat/ai`, {
+      // 3. 스트리밍 API 호출
+      const response = await fetch(`${API_BASE_URL}/chat/ai/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -67,39 +81,52 @@ function ChatInterface() {
       })
 
       if (response.ok) {
-        const data = await response.json()
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
         
-        // 스레드 ID 설정
-        setThreadId(data.thread_id)
-        
-        // 3. AI 응답을 나중에 추가 (사용자 메시지는 이미 표시됨)
-        const aiMessage = {
-          id: data.ai_message.id || Date.now() + 1,
-          message: data.response,
-          is_ai_response: true,
-          user_name: 'AI 어시스턴트',
-          user_type: 'ai',
-          created_at: data.ai_message.created_at || new Date().toISOString()
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          
+          const chunk = decoder.decode(value)
+          const lines = chunk.split('\n')
+          
+          for (const line of lines) {
+            if (line.trim().startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.trim().substring(6))
+                
+                if (data.type === 'chunk') {
+                  // 스트리밍 텍스트를 실시간으로 업데이트
+                  setMessages(prev => prev.map(msg => 
+                    msg.id === aiMessageId 
+                      ? { ...msg, message: msg.message + data.content }
+                      : msg
+                  ))
+                } else if (data.type === 'done') {
+                  // 스트리밍 완료 시 스레드 ID 업데이트
+                  setThreadId(data.thread_id)
+                } else if (data.type === 'error') {
+                  throw new Error(data.message)
+                }
+              } catch (parseError) {
+                console.error('JSON 파싱 오류:', parseError)
+              }
+            }
+          }
         }
-        
-        setMessages(prev => [...prev, aiMessage])
       } else {
         throw new Error('AI 응답 실패')
       }
     } catch (error) {
       console.error('메시지 전송 오류:', error)
       
-      // 에러 메시지 표시
-      const errorMessage = {
-        id: Date.now() + 1,
-        message: '죄송합니다. 현재 AI 서비스를 이용할 수 없습니다.',
-        is_ai_response: true,
-        user_name: 'AI 어시스턴트',
-        user_type: 'ai',
-        created_at: new Date().toISOString()
-      }
-      
-      setMessages(prev => [...prev, errorMessage])
+      // 에러 시 AI 메시지 내용을 오류 메시지로 업데이트
+      setMessages(prev => prev.map(msg => 
+        msg.id === aiMessageId 
+          ? { ...msg, message: '죄송합니다. 현재 AI 서비스를 이용할 수 없습니다.' }
+          : msg
+      ))
     } finally {
       setIsLoading(false)
     }
