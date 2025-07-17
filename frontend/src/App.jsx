@@ -21,6 +21,33 @@ function AuthenticatedApp() {
   const [authMode, setAuthMode] = useState('student');
   const [activeNav, setActiveNav] = useState('tool');
 
+  // Get session info for gallery
+  const getSessionInfo = () => {
+    if (!user) return null;
+    
+    if (user.user_type === 'student') {
+      return {
+        sessionId: user.session_id,
+        sessionInfo: {
+          class_code: user.class_code,
+          id: user.session_id
+        }
+      };
+    } else if (user.user_type === 'teacher') {
+      // For teachers, we'll use the first session if available
+      // In a real app, you might want to let teachers select which session's gallery to view
+      return {
+        sessionId: user.current_session_id || null,
+        sessionInfo: user.current_session_id ? {
+          class_code: user.current_class_code || 'Unknown',
+          id: user.current_session_id
+        } : null
+      };
+    }
+    
+    return null;
+  };
+
   if (loading) {
     return <div className="theme-recommend recommend-dashboard"><div className="loading">Loading...</div></div>;
   }
@@ -79,7 +106,12 @@ function AuthenticatedApp() {
       </header>
       <main className="app-content">
         {activeNav === 'tool' && (user.user_type === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />)}
-        {activeNav === 'gallery' && <Gallery />}
+        {activeNav === 'gallery' && (
+          <Gallery 
+            sessionId={getSessionInfo()?.sessionId}
+            sessionInfo={getSessionInfo()?.sessionInfo}
+          />
+        )}
       </main>
     </div>
   );

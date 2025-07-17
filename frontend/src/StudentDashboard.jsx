@@ -73,7 +73,7 @@ function StudentDashboard() {
 
       <div className="recommend-dashboard__grid">
         <div className="recommend-card" style={{ gridColumn: '1 / -1', padding: 0, overflow: 'hidden' }}>
-          <ImageGenerator />
+          <ImageGenerator user={user} sessionId={user.session_id} />
         </div>
       </div>
     </div>

@@ -166,3 +166,98 @@ class DatabaseService:
         """스레드에 메시지 생성"""
         result = self._make_request('POST', 'chat_messages', message_data)
         return result[0] if isinstance(result, list) else result
+
+    # 갤러리 관련 데이터베이스 작업
+    def create_gallery_item(self, session_id: int, user_id: int, user_name: str, 
+                          user_type: str, image_url: str, prompt: str, 
+                          title: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """갤러리 아이템 생성"""
+        try:
+            gallery_data = {
+                "session_id": session_id,
+                "user_id": user_id,
+                "user_name": user_name,
+                "user_type": user_type,
+                "image_url": image_url,
+                "prompt": prompt,
+                "title": title,
+                "created_at": "now()",
+                "updated_at": "now()"
+            }
+            result = self._make_request('POST', 'gallery_items', gallery_data)
+            return result[0] if isinstance(result, list) else result
+        except Exception as e:
+            print(f"🔴 Error creating gallery item: {str(e)}")
+            return None
+
+    def get_gallery_items_by_session(self, session_id: int) -> List[Dict[str, Any]]:
+        """세션별 갤러리 아이템 조회 (최신순)"""
+        try:
+            return self._make_request('GET', f'gallery_items?session_id=eq.{session_id}&order=created_at.desc')
+        except Exception as e:
+            print(f"🔴 Error fetching gallery items: {str(e)}")
+            return []
+
+    def get_gallery_item_by_id(self, item_id: int) -> Optional[Dict[str, Any]]:
+        """ID로 갤러리 아이템 조회"""
+        try:
+            items = self._make_request('GET', f'gallery_items?id=eq.{item_id}')
+            return items[0] if items else None
+        except Exception as e:
+            print(f"🔴 Error fetching gallery item: {str(e)}")
+            return None
+
+    def delete_gallery_item(self, item_id: int) -> bool:
+        """갤러리 아이템 삭제"""
+        try:
+            self._make_request('DELETE', f'gallery_items?id=eq.{item_id}')
+            return True
+        except Exception as e:
+            print(f"🔴 Error deleting gallery item: {str(e)}")
+            return False
+
+    def get_gallery_items_by_user(self, user_id: int, user_type: str) -> List[Dict[str, Any]]:
+        """사용자별 갤러리 아이템 조회"""
+        try:
+            return self._make_request('GET', f'gallery_items?user_id=eq.{user_id}&user_type=eq.{user_type}&order=created_at.desc')
+        except Exception as e:
+            print(f"🔴 Error fetching user gallery items: {str(e)}")
+            return []
+
+    def update_gallery_item(self, item_id: int, update_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """갤러리 아이템 업데이트"""
+        try:
+            update_data["updated_at"] = "now()"
+            result = self._make_request('PATCH', f'gallery_items?id=eq.{item_id}', update_data)
+            return result[0] if isinstance(result, list) and result else None
+        except Exception as e:
+            print(f"🔴 Error updating gallery item: {str(e)}")
+            return None
+
+    # 추가 헬퍼 메서드들
+    def get_session_by_id(self, session_id: int) -> Optional[Dict[str, Any]]:
+        """ID로 세션 조회"""
+        try:
+            sessions = self._make_request('GET', f'class_sessions?id=eq.{session_id}')
+            return sessions[0] if sessions else None
+        except Exception as e:
+            print(f"🔴 Error fetching session: {str(e)}")
+            return None
+
+    def get_student_by_id(self, student_id: int) -> Optional[Dict[str, Any]]:
+        """ID로 학생 조회"""
+        try:
+            students = self._make_request('GET', f'students?id=eq.{student_id}')
+            return students[0] if students else None
+        except Exception as e:
+            print(f"🔴 Error fetching student: {str(e)}")
+            return None
+
+    def get_student_by_session_and_name(self, session_id: int, name: str) -> Optional[Dict[str, Any]]:
+        """세션과 이름으로 학생 조회"""
+        try:
+            students = self._make_request('GET', f'students?session_id=eq.{session_id}&name=eq.{name}')
+            return students[0] if students else None
+        except Exception as e:
+            print(f"🔴 Error fetching student by session and name: {str(e)}")
+            return None

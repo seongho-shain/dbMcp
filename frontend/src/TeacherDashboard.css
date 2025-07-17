@@ -537,3 +537,31 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Gallery Session Selector */
+.gallery-session-selector {
+  margin-top: 1rem;
+}
+
+.recommend-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  background: var(--primary-bg);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.recommend-select:focus {
+  outline: none;
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 3px rgba(30, 145, 214, 0.1);
+}
+
+.recommend-select option {
+  padding: 0.5rem;
+  background: var(--primary-bg);
+  color: var(--text-primary);
+}

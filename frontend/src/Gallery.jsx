@@ -1,79 +1,229 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import GalleryUploadModal from './components/Gallery/GalleryUploadModal';
+import GalleryItem from './components/Gallery/GalleryItem';
 import Masonry from './components/Masonry';
 import './Gallery.css';
 
-// 가상 데이터 (추후 API로 대체)
-const galleryItems = [
-  {
-    id: "1",
-    img: 'https://via.placeholder.com/600x450.png/A7C7E7/FFFFFF?text=Galaxy+Cat',
-    prompt: 'A cat floating in a vibrant galaxy, surrounded by stars and nebulae, digital art.',
-    author: 'Student123',
-    height: 450,
-    url: "#",
-  },
-  {
-    id: "2",
-    img: 'https://via.placeholder.com/600x350.png/C1E1C1/FFFFFF?text=Future+City',
-    prompt: 'A futuristic city with flying cars and holographic billboards, neon-punk style.',
-    author: 'TeacherA',
-    height: 350,
-    url: "#",
-  },
-  {
-    id: "3",
-    img: 'https://via.placeholder.com/600x550.png/F5D2D3/FFFFFF?text=Enchanted+Forest',
-    prompt: 'An enchanted forest with glowing mushrooms and ancient trees, fantasy art.',
-    author: 'Student456',
-    height: 550,
-    url: "#",
-  },
-  {
-    id: "4",
-    img: 'https://via.placeholder.com/600x400.png/AEC6CF/FFFFFF?text=Ocean+Lighthouse',
-    prompt: 'Lighthouse on a cliff overlooking a stormy ocean, oil painting style.',
-    author: 'TeacherB',
-    height: 400,
-    url: "#",
-  },
-  {
-    id: "5",
-    img: 'https://via.placeholder.com/600x480.png/B39EB5/FFFFFF?text=Robot+Companion',
-    prompt: 'A friendly robot companion helping a child with homework, 3d-model style.',
-    author: 'Student789',
-    height: 480,
-    url: "#",
-  },
-  {
-    id: "6",
-    img: 'https://via.placeholder.com/600x380.png/FFDAB9/FFFFFF?text=Desert+Oasis',
-    prompt: 'A hidden oasis in a vast desert at sunset, photographic style.',
-    author: 'TeacherC',
-    height: 380,
-    url: "#",
-  },
-];
+const API_BASE_URL = 'http://localhost:8000';
 
-function Gallery() {
+function Gallery({ sessionId, sessionInfo }) {
+  const [galleryItems, setGalleryItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [stats, setStats] = useState(null);
+  const { user } = useAuth();
+
+  // Convert gallery items to masonry format
+  const convertToMasonryItems = (items) => {
+    return items.map(item => ({
+      id: item.id,
+      img: item.image_url,
+      prompt: item.prompt,
+      author: `${item.user_name} (${item.user_type === 'teacher' ? '선생님' : '학생'})`,
+      title: item.title,
+      height: 400, // Default height for masonry layout
+      url: "#",
+      originalItem: item
+    }));
+  };
+
+  const fetchGalleryItems = async () => {
+    if (!sessionId || !user) return;
+
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/gallery/session/${sessionId}?user_id=${user.id}&user_type=${user.user_type}`
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setGalleryItems(data.items || []);
+      } else {
+        throw new Error(data.detail || data.error || '갤러리를 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Gallery fetch error:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!sessionId || !user) return;
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/gallery/session/${sessionId}/stats?user_id=${user.id}&user_type=${user.user_type}`
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setStats(data.stats);
+      }
+    } catch (error) {
+      console.error('Stats fetch error:', error);
+    }
+  };
+
+  const handleUploadSuccess = (newItem) => {
+    // Add the new item to the beginning of the list
+    setGalleryItems(prev => [newItem, ...prev]);
+    // Refresh stats
+    fetchStats();
+  };
+
+  const handleItemDelete = (itemId) => {
+    // Remove the item from the list
+    setGalleryItems(prev => prev.filter(item => item.id !== itemId));
+    // Refresh stats
+    fetchStats();
+  };
+
+  useEffect(() => {
+    fetchGalleryItems();
+    fetchStats();
+  }, [sessionId, user]);
+
+  if (!sessionId) {
+    return (
+      <div className="gallery-main">
+        <div className="gallery-header">
+          <h1>AI 창작 갤러리</h1>
+          <div className="gallery-no-session">
+            <div className="gallery-no-session__icon">🎨</div>
+            <p>갤러리를 이용하려면 클래스 세션에 참여해주세요.</p>
+            <small>선생님이 제공한 클래스 코드로 로그인하거나, 선생님이 새로운 클래스를 생성해주세요.</small>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && galleryItems.length === 0) {
+    return (
+      <div className="gallery-main">
+        <div className="gallery-header">
+          <h1>AI 창작 갤러리</h1>
+          <div className="gallery-loading">
+            <div className="gallery-loading__spinner"></div>
+            <p>갤러리를 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="gallery-main">
+        <div className="gallery-header">
+          <h1>AI 창작 갤러리</h1>
+          <div className="gallery-error">
+            <div className="gallery-error__icon">⚠️</div>
+            <p>갤러리를 불러오는데 문제가 발생했습니다.</p>
+            <small>{error}</small>
+            <button 
+              onClick={fetchGalleryItems}
+              className="gallery-retry-btn"
+            >
+              다시 시도
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="gallery-main">
       <div className="gallery-header">
-        <h1>AI 창작 갤러리</h1>
-        <p>학생과 선생님들이 AI로 만든 멋진 이미지들을 감상하고, 프롬프트를 공유해보세요.</p>
+        <div className="gallery-header__content">
+          <div className="gallery-header__text">
+            <h1>AI 창작 갤러리</h1>
+            <p>학생과 선생님들이 AI로 만든 멋진 이미지들을 감상하고, 프롬프트를 공유해보세요.</p>
+          </div>
+          <div className="gallery-header__actions">
+            <button 
+              onClick={() => setShowUploadModal(true)}
+              className="gallery-upload-btn"
+            >
+              <span className="gallery-upload-btn__icon">📤</span>
+              작품 업로드
+            </button>
+          </div>
+        </div>
+
+        {sessionInfo && (
+          <div className="gallery-session-info">
+            <div className="gallery-session-info__main">
+              <span className="gallery-session-info__label">현재 클래스:</span>
+              <span className="gallery-session-info__code">{sessionInfo.class_code}</span>
+            </div>
+            {stats && (
+              <div className="gallery-session-stats">
+                <div className="gallery-stat">
+                  <span className="gallery-stat__value">{stats.total_items}</span>
+                  <span className="gallery-stat__label">총 작품</span>
+                </div>
+                <div className="gallery-stat">
+                  <span className="gallery-stat__value">{stats.student_items}</span>
+                  <span className="gallery-stat__label">학생 작품</span>
+                </div>
+                <div className="gallery-stat">
+                  <span className="gallery-stat__value">{stats.teacher_items}</span>
+                  <span className="gallery-stat__label">선생님 작품</span>
+                </div>
+                <div className="gallery-stat">
+                  <span className="gallery-stat__value">{stats.unique_contributors}</span>
+                  <span className="gallery-stat__label">참여자</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
       <div className="gallery-container">
-        <Masonry
-          items={galleryItems}
-          ease="power3.out"
-          duration={0.6}
-          stagger={0.05}
-          animateFrom="bottom"
-          scaleOnHover={true}
-          hoverScale={0.95}
-          blurToFocus={true}
-          colorShiftOnHover={false}
-        />
+        {galleryItems.length === 0 ? (
+          <div className="gallery-empty">
+            <div className="gallery-empty__icon">🎨</div>
+            <h3>아직 업로드된 작품이 없습니다</h3>
+            <p>첫 번째 작품을 업로드해보세요!</p>
+            <button 
+              onClick={() => setShowUploadModal(true)}
+              className="gallery-upload-btn gallery-upload-btn--large"
+            >
+              <span className="gallery-upload-btn__icon">📤</span>
+              작품 업로드하기
+            </button>
+          </div>
+        ) : (
+          <div className="gallery-grid">
+            {galleryItems.map((item) => (
+              <GalleryItem
+                key={item.id}
+                item={item}
+                onDelete={handleItemDelete}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      <GalleryUploadModal
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        sessionId={sessionId}
+        onUploadSuccess={handleUploadSuccess}
+      />
     </div>
   );
 }

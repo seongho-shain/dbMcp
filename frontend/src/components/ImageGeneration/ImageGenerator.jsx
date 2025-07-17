@@ -3,7 +3,7 @@ import './ImageGenerator.css'
 
 const API_BASE_URL = 'http://localhost:8000'
 
-const ImageGenerator = ({ onClose }) => {
+const ImageGenerator = ({ onClose, user, sessionId }) => {
   const [activeTab, setActiveTab] = useState('generation')
   const [generationType, setGenerationType] = useState('core')
   const [generationMode, setGenerationMode] = useState('text-to-image')
@@ -199,6 +199,55 @@ const ImageGenerator = ({ onClose }) => {
     } catch (err) {
       console.error('스케치 변환 오류:', err)
       setError(err.message || '스케치 변환 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 갤러리에 업로드 기능
+  const uploadToGallery = async () => {
+    if (!generatedImage || !user || !sessionId) {
+      alert('업로드할 이미지가 없거나 사용자 정보가 없습니다.')
+      return
+    }
+
+    if (!formData.prompt.trim()) {
+      alert('프롬프트를 입력해주세요.')
+      return
+    }
+
+    try {
+      setLoading(true)
+      
+      // 생성된 이미지를 Blob으로 변환
+      const response = await fetch(generatedImage)
+      const imageBlob = await response.blob()
+      
+      // FormData 생성
+      const uploadFormData = new FormData()
+      uploadFormData.append('image', imageBlob, `ai-generated-${Date.now()}.${formData.output_format}`)
+      uploadFormData.append('session_id', sessionId.toString())
+      uploadFormData.append('user_id', user.id.toString())
+      uploadFormData.append('user_name', user.name)
+      uploadFormData.append('user_type', user.user_type)
+      uploadFormData.append('prompt', formData.prompt.trim())
+      uploadFormData.append('title', `AI 생성 이미지 - ${new Date().toLocaleDateString()}`)
+
+      const uploadResponse = await fetch(`${API_BASE_URL}/api/gallery/upload`, {
+        method: 'POST',
+        body: uploadFormData,
+      })
+
+      const uploadData = await uploadResponse.json()
+
+      if (uploadResponse.ok && uploadData.success) {
+        alert('이미지가 갤러리에 성공적으로 업로드되었습니다!')
+      } else {
+        throw new Error(uploadData.detail || uploadData.error || '갤러리 업로드에 실패했습니다.')
+      }
+    } catch (error) {
+      console.error('Gallery upload error:', error)
+      alert(`갤러리 업로드 실패: ${error.message}`)
     } finally {
       setLoading(false)
     }
@@ -507,6 +556,15 @@ const ImageGenerator = ({ onClose }) => {
                 >
                   💾 다운로드
                 </a>
+                {user && sessionId && (
+                  <button 
+                    onClick={uploadToGallery}
+                    className="gallery-upload-btn"
+                    disabled={loading}
+                  >
+                    {loading ? '업로드 중...' : '🖼️ 갤러리에 업로드'}
+                  </button>
+                )}
               </div>
             </div>
           )}

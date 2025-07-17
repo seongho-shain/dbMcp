@@ -12,7 +12,8 @@ function TeacherDashboard() {
   const [loading, setLoading] = useState(false);
   const [creatingClass, setCreatingClass] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
-  const { user, logout } = useAuth();
+  const [currentGallerySession, setCurrentGallerySession] = useState(null);
+  const { user, logout, updateUser } = useAuth();
 
   const fetchSessions = async () => {
     setLoading(true);
@@ -58,6 +59,18 @@ function TeacherDashboard() {
       alert('클래스 생성에 실패했습니다.');
     } finally {
       setCreatingClass(false);
+    }
+  };
+
+  const setGallerySession = (session) => {
+    setCurrentGallerySession(session);
+    // Update user context with current session info for gallery
+    if (updateUser) {
+      updateUser({
+        ...user,
+        current_session_id: session?.id,
+        current_class_code: session?.class_code
+      });
     }
   };
 
@@ -118,6 +131,46 @@ function TeacherDashboard() {
                   {Object.values(students).reduce((total, sessionStudents) => total + sessionStudents.length, 0)}
                 </span>
                 <span className="recommend-stat-item__label">참여 학생</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="recommend-card">
+          <div className="recommend-card__header">🎨 갤러리 세션 선택</div>
+          <div className="recommend-card__content">
+            <div className="recommend-features">
+              <div className="recommend-feature">
+                <div className="recommend-feature__icon">📋</div>
+                <div className="recommend-feature__content">
+                  <h4>현재 갤러리 세션</h4>
+                  <p>
+                    {currentGallerySession 
+                      ? `${currentGallerySession.class_code} (${students[currentGallerySession.id]?.length || 0}명 참여)`
+                      : '선택된 세션이 없습니다'
+                    }
+                  </p>
+                  {sessions.length > 0 && (
+                    <div className="gallery-session-selector">
+                      <select 
+                        value={currentGallerySession?.id || ''} 
+                        onChange={(e) => {
+                          const sessionId = parseInt(e.target.value);
+                          const session = sessions.find(s => s.id === sessionId);
+                          setGallerySession(session);
+                        }}
+                        className="recommend-select"
+                      >
+                        <option value="">갤러리 세션 선택</option>
+                        {sessions.map(session => (
+                          <option key={session.id} value={session.id}>
+                            {session.class_code} ({students[session.id]?.length || 0}명 참여)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -193,27 +246,18 @@ function TeacherDashboard() {
 
       {selectedSession && (
         <div className="recommend-dashboard__grid">
-          <div className="recommend-card" style={{ gridColumn: '1 / -1' }}>
-            <div className="recommend-card__header">
-              🤖 AI 채팅 - {selectedSession.class_code}
-              <button
-                onClick={() => setSelectedSession(null)}
-                className="recommend-btn recommend-btn--secondary"
-                style={{ marginLeft: 'auto' }}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="recommend-card__content">
+          
               <ChatInterface />
-            </div>
-          </div>
+           
         </div>
       )}
 
       <div className="recommend-dashboard__grid">
         <div className="recommend-card" style={{ gridColumn: '1 / -1', padding: 0, overflow: 'hidden' }}>
-          <ImageGenerator />
+          <ImageGenerator 
+            user={user} 
+            sessionId={currentGallerySession?.id || (user.current_session_id || null)} 
+          />
         </div>
       </div>
     </div>
