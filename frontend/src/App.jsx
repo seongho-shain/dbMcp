@@ -6,6 +6,7 @@ import TeacherSignup from './TeacherSignup';
 import TeacherDashboard from './TeacherDashboard';
 import StudentDashboard from './StudentDashboard';
 import Gallery from './Gallery';
+import Particles from './components/Particles';
 import './App.css';
 
 function App() {
@@ -55,6 +56,13 @@ function AuthenticatedApp() {
   if (!user) {
     return (
       <div className="theme-recommend recommend-dashboard">
+        <Particles 
+          count={80}
+          size={2.5}
+          speed={0.3}
+          color="#1e91d6"
+          opacity={0.4}
+        />
         <div className="auth-container">
           <div className="auth-mode-selector">
             <button 

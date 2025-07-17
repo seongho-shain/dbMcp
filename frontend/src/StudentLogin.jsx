@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from './AuthContext'
+import Particles from './components/Particles'
 import './Login.css'
 
 const API_BASE_URL = 'http://localhost:8000'

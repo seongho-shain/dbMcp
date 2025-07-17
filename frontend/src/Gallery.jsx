@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import GalleryUploadModal from './components/Gallery/GalleryUploadModal';
 import GalleryItem from './components/Gallery/GalleryItem';
