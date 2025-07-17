@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import GalleryUploadModal from './components/Gallery/GalleryUploadModal';
 import GalleryItem from './components/Gallery/GalleryItem';
-import Masonry from './components/Masonry';
+import Masonry from './components/Gallery/Masonry';
 import './Gallery.css';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -12,21 +12,31 @@ function Gallery({ sessionId, sessionInfo }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [stats, setStats] = useState(null);
   const { user } = useAuth();
 
   // Convert gallery items to masonry format
   const convertToMasonryItems = (items) => {
-    return items.map(item => ({
-      id: item.id,
-      img: item.image_url,
-      prompt: item.prompt,
-      author: `${item.user_name} (${item.user_type === 'teacher' ? '선생님' : '학생'})`,
-      title: item.title,
-      height: 400, // Default height for masonry layout
-      url: "#",
-      originalItem: item
-    }));
+    return items.map(item => {
+      // Generate random height for masonry effect (between 250-500px)
+      const height = Math.floor(Math.random() * (500 - 250 + 1)) + 250;
+      
+      return {
+        id: item.id.toString(),
+        img: item.image_url,
+        prompt: item.prompt,
+        title: item.title || 'AI 생성 이미지',
+        user_name: item.user_name,
+        user_type: item.user_type,
+        user_id: item.user_id,
+        created_at: item.created_at,
+        height: height,
+        url: "#",
+        originalItem: item
+      };
+    });
   };
 
   const fetchGalleryItems = async () => {
@@ -80,11 +90,43 @@ function Gallery({ sessionId, sessionInfo }) {
     fetchStats();
   };
 
-  const handleItemDelete = (itemId) => {
-    // Remove the item from the list
-    setGalleryItems(prev => prev.filter(item => item.id !== itemId));
-    // Refresh stats
-    fetchStats();
+  const handleItemDelete = async (item) => {
+    if (!confirm('정말로 이 작품을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/gallery/${item.originalItem.id}?user_id=${user.id}&user_type=${user.user_type}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Remove the item from the list
+        setGalleryItems(prev => prev.filter(galleryItem => galleryItem.id !== item.originalItem.id));
+        // Refresh stats
+        fetchStats();
+        alert('작품이 삭제되었습니다.');
+      } else {
+        throw new Error(data.detail || data.error || '삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert(`삭제 실패: ${error.message}`);
+    }
+  };
+
+  const handleItemView = (item) => {
+    setSelectedItem(item.originalItem);
+    setShowDetailModal(true);
+  };
+
+  const handleItemClick = (item) => {
+    handleItemView(item);
   };
 
   useEffect(() => {
@@ -206,15 +248,21 @@ function Gallery({ sessionId, sessionInfo }) {
             </button>
           </div>
         ) : (
-          <div className="gallery-grid">
-            {galleryItems.map((item) => (
-              <GalleryItem
-                key={item.id}
-                item={item}
-                onDelete={handleItemDelete}
-              />
-            ))}
-          </div>
+          <Masonry
+            items={convertToMasonryItems(galleryItems)}
+            ease="power3.out"
+            duration={0.6}
+            stagger={0.05}
+            animateFrom="bottom"
+            scaleOnHover={true}
+            hoverScale={1.02}
+            blurToFocus={true}
+            colorShiftOnHover={false}
+            onItemClick={handleItemClick}
+            onItemView={handleItemView}
+            onItemDelete={handleItemDelete}
+            user={user}
+          />
         )}
       </div>
 
@@ -224,6 +272,27 @@ function Gallery({ sessionId, sessionInfo }) {
         sessionId={sessionId}
         onUploadSuccess={handleUploadSuccess}
       />
+
+      {selectedItem && (
+        <GalleryItem
+          isModal={true}
+          isOpen={showDetailModal}
+          item={selectedItem}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedItem(null);
+          }}
+          onDelete={(itemId) => {
+            // Close modal first
+            setShowDetailModal(false);
+            setSelectedItem(null);
+            // Remove item from list
+            setGalleryItems(prev => prev.filter(item => item.id !== itemId));
+            // Refresh stats
+            fetchStats();
+          }}
+        />
+      )}
     </div>
   );
 }

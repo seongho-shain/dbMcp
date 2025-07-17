@@ -4,7 +4,7 @@ import './GalleryItem.css';
 
 const API_BASE_URL = 'http://localhost:8000';
 
-function GalleryItem({ item, onDelete }) {
+function GalleryItem({ item, onDelete, isModal = false, isOpen = false, onClose }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPromptModal, setShowPromptModal] = useState(false);
@@ -63,6 +63,100 @@ function GalleryItem({ item, onDelete }) {
   const getUserTypeLabel = (userType) => {
     return userType === 'teacher' ? '선생님' : '학생';
   };
+
+  // If this is a modal mode, show the modal directly
+  if (isModal) {
+    if (!isOpen) return null;
+    
+    return (
+      <div className="gallery-modal-overlay" onClick={onClose}>
+        <div className="gallery-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="gallery-modal__header">
+            <h3>{item.title || '작품 상세'}</h3>
+            <button 
+              className="gallery-modal__close"
+              onClick={onClose}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div className="gallery-modal__content">
+            <div className="gallery-modal__image">
+              <img src={item.image_url} alt={item.title || item.prompt} />
+            </div>
+            
+            <div className="gallery-modal__details">
+              <div className="gallery-modal__section">
+                <h4>프롬프트</h4>
+                <p className="gallery-modal__prompt">{item.prompt}</p>
+              </div>
+              
+              <div className="gallery-modal__section">
+                <h4>작품 정보</h4>
+                <div className="gallery-modal__info">
+                  <div className="gallery-modal__info-item">
+                    <span className="gallery-modal__info-label">작성자:</span>
+                    <span>{item.user_name} ({getUserTypeLabel(item.user_type)})</span>
+                  </div>
+                  <div className="gallery-modal__info-item">
+                    <span className="gallery-modal__info-label">생성일:</span>
+                    <span>{formatDate(item.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="gallery-modal__actions">
+            {canDelete && (
+              <button 
+                onClick={() => setShowDeleteConfirm(true)}
+                className="gallery-btn gallery-btn--danger"
+                disabled={isDeleting}
+              >
+                {isDeleting ? '삭제 중...' : '삭제'}
+              </button>
+            )}
+            <button 
+              onClick={onClose}
+              className="gallery-btn gallery-btn--primary"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+        
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="gallery-modal-overlay" onClick={() => setShowDeleteConfirm(false)}>
+            <div className="gallery-modal gallery-modal--small" onClick={(e) => e.stopPropagation()}>
+              <h3>작품 삭제</h3>
+              <p>정말로 이 작품을 삭제하시겠습니까?</p>
+              <p className="gallery-modal__warning">삭제된 작품은 복구할 수 없습니다.</p>
+              
+              <div className="gallery-modal__actions">
+                <button 
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="gallery-btn gallery-btn--secondary"
+                  disabled={isDeleting}
+                >
+                  취소
+                </button>
+                <button 
+                  onClick={handleDelete}
+                  className="gallery-btn gallery-btn--danger"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? '삭제 중...' : '삭제'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <>

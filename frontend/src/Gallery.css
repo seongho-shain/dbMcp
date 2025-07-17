@@ -271,6 +271,14 @@
 
 .gallery-container {
   width: 100%;
+  position: relative;
+  min-height: 400px;
+}
+
+/* Masonry container styles */
+.gallery-container .masonry-list {
+  margin-top: 2rem;
+  min-height: 400px;
 }
 
 /* Responsive Design */
