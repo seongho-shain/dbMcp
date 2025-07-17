@@ -1,9 +1,12 @@
+import { useState } from 'react'
 import { useAuth } from './AuthContext'
 import ChatInterface from './components/ChatInterface'
+import ImageGenerator from './components/ImageGeneration/ImageGenerator'
 import './StudentDashboard.css'
 
 function StudentDashboard() {
   const { user, logout } = useAuth()
+  const [showImageGenerator, setShowImageGenerator] = useState(false)
 
   return (
     <div className="recommend-dashboard__main">
@@ -62,6 +65,27 @@ function StudentDashboard() {
             </div>
           </div>
         </div>
+        
+        <div className="recommend-card">
+          <div className="recommend-card__header">🎨 창의 도구</div>
+          <div className="recommend-card__content">
+            <div className="recommend-features">
+              <div className="recommend-feature">
+                <div className="recommend-feature__icon">🖼️</div>
+                <div className="recommend-feature__content">
+                  <h4>AI 이미지 생성</h4>
+                  <p>상상한 이미지를 AI로 만들어보세요</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowImageGenerator(true)}
+                className="recommend-btn recommend-btn--primary"
+              >
+                🎨 이미지 생성
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
       
       <div className="recommend-dashboard__grid">
@@ -72,6 +96,16 @@ function StudentDashboard() {
           </div>
         </div>
       </div>
+      
+      {showImageGenerator && (
+        <div className="recommend-dashboard__grid">
+          <div className="recommend-card" style={{ gridColumn: '1 / -1' }}>
+            <div className="recommend-card__content">
+              <ImageGenerator onClose={() => setShowImageGenerator(false)} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

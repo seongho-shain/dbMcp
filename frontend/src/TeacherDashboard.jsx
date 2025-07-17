@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 import ChatInterface from './components/ChatInterface'
+import ImageGenerator from './components/ImageGeneration/ImageGenerator'
 import './TeacherDashboard.css'
 
 const API_BASE_URL = 'http://localhost:8000'
@@ -11,6 +12,7 @@ function TeacherDashboard() {
   const [loading, setLoading] = useState(false)
   const [creatingClass, setCreatingClass] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
+  const [showImageGenerator, setShowImageGenerator] = useState(false)
   const { user, logout } = useAuth()
 
   const fetchSessions = async () => {
@@ -102,6 +104,27 @@ function TeacherDashboard() {
               </div>
             </div>
             {loading && <p>로딩 중...</p>}
+          </div>
+        </div>
+        
+        <div className="recommend-card">
+          <div className="recommend-card__header">🎨 교육 도구</div>
+          <div className="recommend-card__content">
+            <div className="recommend-features">
+              <div className="recommend-feature">
+                <div className="recommend-feature__icon">🖼️</div>
+                <div className="recommend-feature__content">
+                  <h4>AI 이미지 생성</h4>
+                  <p>교육 자료용 이미지를 AI로 생성하세요</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowImageGenerator(true)}
+                className="recommend-btn recommend-btn--primary"
+              >
+                🎨 이미지 생성
+              </button>
+            </div>
           </div>
         </div>
         
@@ -206,6 +229,16 @@ function TeacherDashboard() {
             </div>
             <div className="recommend-card__content">
               <ChatInterface />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {showImageGenerator && (
+        <div className="recommend-dashboard__grid">
+          <div className="recommend-card" style={{ gridColumn: '1 / -1' }}>
+            <div className="recommend-card__content">
+              <ImageGenerator onClose={() => setShowImageGenerator(false)} />
             </div>
           </div>
         </div>
