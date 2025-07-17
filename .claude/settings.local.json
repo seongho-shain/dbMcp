@@ -26,7 +26,12 @@
       "Bash(npm run dev:*)",
       "Bash(conda activate:*)",
       "Bash(python:*)",
-      "WebFetch(domain:reactbits.dev)"
+      "WebFetch(domain:reactbits.dev)",
+      "Bash(mv:*)",
+      "Bash(source ~/.bashrc)",
+      "Bash(cp:*)",
+      "Bash(npm:*)",
+      "Bash(pip3 install:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

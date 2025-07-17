@@ -7,10 +7,10 @@ from typing import Optional
 import json
 
 from app.controllers.gallery_controller import GalleryController
-from app.services.database_service import DatabaseService
+from app.core.services.database_service import DatabaseService
 
 
-router = APIRouter()
+router = APIRouter(prefix="/gallery", tags=["gallery"])
 db_service = DatabaseService()
 gallery_controller = GalleryController(db_service)
 

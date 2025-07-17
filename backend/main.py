@@ -1,15 +1,15 @@
 """
 메인 애플리케이션 파일
 FastAPI 애플리케이션 초기화 및 설정
-MVC 패턴으로 리팩토링된 구조에서 애플리케이션 진입점 역할
+Feature-based 구조로 리팩토링된 구조에서 애플리케이션 진입점 역할
 
 리팩토링 이유:
 1. 관심사 분리 (Separation of Concerns)
-   - 각 계층이 고유한 책임을 가지도록 분리
+   - 각 기능별로 완전히 분리된 모듈 구조
    - 코드 유지보수성과 가독성 향상
 
 2. 단일 책임 원칙 (Single Responsibility Principle)
-   - 각 클래스와 모듈이 하나의 책임만 가지도록 설계
+   - 각 feature가 하나의 기능만 담당
    - 변경 시 영향 범위 최소화
 
 3. 의존성 역전 원칙 (Dependency Inversion Principle)
@@ -17,25 +17,35 @@ MVC 패턴으로 리팩토링된 구조에서 애플리케이션 진입점 역�
    - 인터페이스를 통한 느슨한 결합
 
 4. 재사용성 및 확장성
-   - 각 계층이 독립적으로 수정 가능
+   - 각 feature가 독립적으로 수정 가능
    - 새로운 기능 추가 시 기존 코드 수정 최소화
 
 5. 테스트 용이성
-   - 각 계층별로 단위 테스트 작성 가능
+   - 각 feature별로 단위 테스트 작성 가능
    - 모킹(Mocking)을 통한 독립적 테스트 가능
 """
 import uvicorn
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config.settings import CORS_ORIGINS, SERVER_HOST, SERVER_PORT
-from app.views import main_routes, teacher_routes, student_routes, chat_routes, image_routes, gallery_views
+from app.core.config.settings import CORS_ORIGINS, SERVER_HOST, SERVER_PORT
+
+# Feature-based 라우터 import
+from app.features.auth.routes import router as auth_router
+from app.features.teacher.routes import router as teacher_router
+from app.features.student.routes import router as student_router
+
+# 기존 라우트 유지 (아직 리팩토링 안 된 것들)
+from app.views.main_routes import router as main_router
+from app.views.chat_routes import router as chat_router
+from app.views.gallery_views import router as gallery_router
+from app.views.image_routes import router as image_generation_router
 
 # FastAPI 애플리케이션 인스턴스 생성
 app = FastAPI(
     title="Education System API",
-    description="MVC 패턴으로 구성된 교육 시스템 API",
-    version="1.0.0"
+    description="Feature-based 구조로 구성된 교육 시스템 API",
+    version="2.0.0"
 )
 
 # CORS 미들웨어 설정
@@ -48,27 +58,20 @@ app.add_middleware(
     allow_headers=["*"],         # 모든 헤더 허용
 )
 
-# API 라우터 등록
-# 각 기능별로 분리된 라우터를 메인 애플리케이션에 포함
-app.include_router(main_routes.router)      # 메인 라우트 (/, /health)
-app.include_router(teacher_routes.router)   # 선생님 관련 라우트 (/teacher/*)
-app.include_router(student_routes.router)   # 학생 관련 라우트 (/student/*)
-app.include_router(chat_routes.router)      # 채팅 관련 라우트 (/chat/*)
-app.include_router(image_routes.router)     # 이미지 생성 관련 라우트 (/api/image/*)
-app.include_router(gallery_views.router, prefix="/api/gallery", tags=["gallery"])  # 갤러리 관련 라우트 (/api/gallery/*)
+# Feature-based API 라우터 등록
+# 각 기능별로 완전히 분리된 라우터를 메인 애플리케이션에 포함
+app.include_router(main_router)                      # 메인 라우트 (/, /health)
+app.include_router(auth_router)                      # 인증 관련 라우트 (/auth/*)
+app.include_router(teacher_router)                   # 선생님 관련 라우트 (/teacher/*)
+app.include_router(student_router)                   # 학생 관련 라우트 (/student/*)
+app.include_router(chat_router)                      # 채팅 관련 라우트 (/chat/*)
+app.include_router(gallery_router)                   # 갤러리 관련 라우트 (/gallery/*)
+app.include_router(image_generation_router)          # 이미지 생성 관련 라우트 (/image/*)
 
-# 세션 관련 라우트 별도 등록 (기존 API 호환성 유지)
-# /session/{session_id}/students 경로를 위한 추가 라우터
-session_router = APIRouter(prefix="/session", tags=["sessions"])
-
-@session_router.get("/{session_id}/students")
-async def get_session_students(session_id: int):
-    """세션에 참여한 학생 목록 조회"""
-    from app.controllers.student_controller import StudentController
-    student_controller = StudentController()
-    return student_controller.get_session_students(session_id)
-
-app.include_router(session_router)
+# 하위 호환성을 위한 추가 라우트 등록
+# 기존 API 경로와의 호환성을 위해 prefix 추가
+app.include_router(gallery_router, prefix="/api")          # /api/gallery/*
+app.include_router(image_generation_router, prefix="/api") # /api/image/*
 
 if __name__ == "__main__":
     # 개발 서버 실행

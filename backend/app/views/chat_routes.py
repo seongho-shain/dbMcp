@@ -9,8 +9,8 @@ from datetime import datetime
 import base64
 import os
 
-from app.services.openai_service import OpenAIService
-from app.services.database_service import DatabaseService
+from app.core.services.openai_service import OpenAIService
+from app.core.services.database_service import DatabaseService
 
 router = APIRouter()
 
@@ -51,8 +51,20 @@ async def chat_with_ai_stream(
     
     # 기본 파라미터 추출
     message = form.get('message', '')
-    user_id = int(form.get('user_id', 0))
-    session_id = int(form.get('session_id', 0))
+    
+    # 안전한 정수 변환
+    try:
+        user_id_str = form.get('user_id', '0')
+        user_id = int(user_id_str) if user_id_str and user_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        user_id = 0
+    
+    try:
+        session_id_str = form.get('session_id', '0')
+        session_id = int(session_id_str) if session_id_str and session_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        session_id = 0
+    
     user_name = form.get('user_name', '')
     user_type = form.get('user_type', '')
     

@@ -7,7 +7,7 @@ View(API 라우터)와 Service(데이터 접근) 사이의 중간 계층
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 
-from app.models.schemas import (
+from app.core.models.schemas import (
     TeacherSignupRequest, 
     TeacherLoginRequest, 
     TeacherResponse, 
@@ -16,9 +16,9 @@ from app.models.schemas import (
     CreateClassResponse,
     ClassSessionResponse
 )
-from app.services.database_service import DatabaseService
-from app.utils.security import hash_password, generate_class_code
-from app.config.settings import SESSION_EXPIRE_HOURS
+from app.core.services.database_service import DatabaseService
+from app.core.utils.security import hash_password, generate_class_code
+from app.core.config.settings import SESSION_EXPIRE_HOURS
 
 
 class TeacherController:
@@ -134,6 +134,32 @@ class TeacherController:
             클래스 세션 목록
         """
         return self.db_service.get_teacher_sessions(teacher_id)
+
+    def delete_session(self, session_id: int) -> dict:
+        """
+        클래스 세션 삭제
+        세션과 관련된 모든 데이터 삭제 (학생, 채팅, 이미지 등)
+        
+        Args:
+            session_id: 삭제할 세션 ID
+            
+        Returns:
+            삭제 성공 메시지
+            
+        Raises:
+            HTTPException: 세션을 찾을 수 없거나 삭제 실패 시 에러
+        """
+        # 세션 존재 확인
+        session = self.db_service.get_session_by_id(session_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        try:
+            # 세션 삭제 (cascade로 관련 데이터도 함께 삭제됨)
+            self.db_service.delete_session(session_id)
+            return {"message": "Session deleted successfully"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete session: {str(e)}")
 
     def _generate_unique_class_code(self) -> str:
         """

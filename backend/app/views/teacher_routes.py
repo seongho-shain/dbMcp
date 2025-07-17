@@ -7,7 +7,7 @@ URL 경로와 HTTP 메서드를 정의하고 요청/응답 데이터를 처리
 from fastapi import APIRouter, HTTPException
 from typing import List
 
-from app.models.schemas import (
+from app.core.models.schemas import (
     TeacherSignupRequest,
     TeacherLoginRequest, 
     TeacherResponse,
@@ -93,3 +93,21 @@ async def get_teacher_sessions(teacher_id: int):
         HTTPException: 데이터베이스 오류 시 500 에러
     """
     return teacher_controller.get_teacher_sessions(teacher_id)
+
+
+@router.delete("/session/{session_id}")
+async def delete_session(session_id: int):
+    """
+    클래스 세션 삭제 API
+    선생님이 생성한 클래스 세션을 삭제 (관련된 모든 데이터 포함)
+    
+    Args:
+        session_id: 삭제할 세션 ID
+        
+    Returns:
+        삭제 성공 메시지
+        
+    Raises:
+        HTTPException: 세션을 찾을 수 없거나 삭제 실패 시 에러
+    """
+    return teacher_controller.delete_session(session_id)

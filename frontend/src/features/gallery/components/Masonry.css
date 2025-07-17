@@ -1,0 +1,261 @@
+/* Masonry Gallery Styles */
+
+/* Import theme variables */
+:root {
+  --primary-bg: #ffffff;
+  --secondary-bg: #f8fafc;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --celestial-blue: #1e91d6;
+  --french-blue: #0072bb;
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --border-radius: 8px;
+  --border-radius-md: 12px;
+  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.masonry-list {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+}
+
+.masonry-item-wrapper {
+  position: absolute;
+  cursor: pointer;
+  padding: 8px;
+  box-sizing: border-box;
+  transition: transform 0.3s ease;
+}
+
+.masonry-item-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: var(--border-radius-md);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  border: 2px solid transparent;
+}
+
+.masonry-item-wrapper:hover .masonry-item-img {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--celestial-blue);
+}
+
+/* Overlay */
+.masonry-item-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: var(--transition);
+  border-radius: var(--border-radius-md);
+}
+
+.masonry-item-wrapper:hover .masonry-item-overlay {
+  opacity: 1;
+}
+
+/* Action buttons */
+.masonry-item-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.masonry-action-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: var(--transition);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-md);
+}
+
+.masonry-action-btn:hover {
+  background: var(--primary-bg);
+  transform: scale(1.1);
+}
+
+.masonry-action-btn--delete:hover {
+  background: #ff4444;
+  color: var(--primary-bg);
+}
+
+.masonry-action-btn--view:hover {
+  background: var(--celestial-blue);
+  color: var(--primary-bg);
+}
+
+/* Item info */
+.masonry-item-info {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(white, rgba(0, 0, 0, 0.8));
+  color: white;
+  padding: 1.5rem 1rem 1rem 1rem;
+  border-radius: 0 0 12px 12px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.masonry-item-wrapper:hover .masonry-item-info {
+  transform: translateY(0);
+}
+
+.masonry-item-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.masonry-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.masonry-item-author {
+  font-weight: 500;
+}
+
+.masonry-item-type {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Loading animation */
+.masonry-item-img::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.5s infinite;
+  border-radius: 12px;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Focus states for accessibility */
+.masonry-action-btn:focus {
+  outline: 2px solid var(--recommend-primary, #1e91d6);
+  outline-offset: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .masonry-item-wrapper {
+    padding: 4px;
+  }
+
+  .masonry-action-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .masonry-item-actions {
+    gap: 0.75rem;
+  }
+
+  .masonry-item-info {
+    padding: 1rem 0.75rem 0.75rem 0.75rem;
+  }
+
+  .masonry-item-title {
+    font-size: 0.9rem;
+  }
+
+  .masonry-item-meta {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .masonry-item-wrapper {
+    padding: 2px;
+  }
+
+  .masonry-action-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .masonry-item-actions {
+    gap: 0.5rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .masonry-item-overlay,
+  .masonry-item-actions {
+    display: none !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .masonry-item-img {
+    border: 2px solid #000;
+  }
+  
+  .masonry-item-overlay {
+    background: rgba(0, 0, 0, 0.9);
+  }
+  
+  .masonry-action-btn {
+    background: #fff;
+    border: 1px solid #000;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .masonry-item-wrapper,
+  .masonry-item-img,
+  .masonry-item-overlay,
+  .masonry-item-info,
+  .masonry-action-btn {
+    transition: none;
+  }
+}

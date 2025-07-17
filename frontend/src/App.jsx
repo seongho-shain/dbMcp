@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './AuthContext';
-import TeacherLogin from './TeacherLogin';
-import StudentLogin from './StudentLogin';
-import TeacherSignup from './TeacherSignup';
-import TeacherDashboard from './TeacherDashboard';
-import StudentDashboard from './StudentDashboard';
-import Gallery from './Gallery';
-import Particles from './components/Particles';
+import { StudentLogin, TeacherLogin, TeacherSignup } from './features/auth';
+import { TeacherDashboard, StudentDashboard } from './features/dashboard';
+import { Gallery } from './features/gallery';
+import ChatInterface from './features/chat/components/ChatInterface';
+import ImageGenerator from './features/imageGeneration/components/ImageGenerator';
 import './App.css';
 
 function App() {
   return (
     <AuthProvider>
-      <AuthenticatedApp />
+
+
+        <AuthenticatedApp />
+
     </AuthProvider>
   );
 }
@@ -56,13 +57,6 @@ function AuthenticatedApp() {
   if (!user) {
     return (
       <div className="theme-recommend recommend-dashboard">
-        <Particles 
-          count={80}
-          size={2.5}
-          speed={0.3}
-          color="#1e91d6"
-          opacity={0.4}
-        />
         <div className="auth-container">
           <div className="auth-mode-selector">
             <button 
@@ -105,6 +99,18 @@ function AuthenticatedApp() {
             툴
           </button>
           <button 
+            className={`nav-button ${activeNav === 'chat' ? 'active' : ''}`}
+            onClick={() => setActiveNav('chat')}
+          >
+            채팅
+          </button>
+          <button 
+            className={`nav-button ${activeNav === 'image' ? 'active' : ''}`}
+            onClick={() => setActiveNav('image')}
+          >
+            이미지
+          </button>
+          <button 
             className={`nav-button ${activeNav === 'gallery' ? 'active' : ''}`}
             onClick={() => setActiveNav('gallery')}
           >
@@ -114,6 +120,18 @@ function AuthenticatedApp() {
       </header>
       <main className="app-content">
         {activeNav === 'tool' && (user.user_type === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />)}
+        {activeNav === 'chat' && (
+          <ChatInterface 
+            sessionId={getSessionInfo()?.sessionId}
+            sessionInfo={getSessionInfo()?.sessionInfo}
+          />
+        )}
+        {activeNav === 'image' && (
+          <ImageGenerator 
+            user={user}
+            sessionId={getSessionInfo()?.sessionId}
+          />
+        )}
         {activeNav === 'gallery' && (
           <Gallery 
             sessionId={getSessionInfo()?.sessionId}

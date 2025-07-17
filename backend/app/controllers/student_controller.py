@@ -6,12 +6,12 @@ MVC 패턴에서 Controller 역할을 담당
 from fastapi import HTTPException
 from datetime import datetime
 
-from app.models.schemas import (
+from app.core.models.schemas import (
     StudentLoginRequest,
     StudentResponse,
     LoginResponse
 )
-from app.services.database_service import DatabaseService
+from app.core.services.database_service import DatabaseService
 
 
 class StudentController:

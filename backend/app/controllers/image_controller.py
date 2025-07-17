@@ -9,8 +9,8 @@ from typing import Optional, Dict, Any
 from fastapi import UploadFile, HTTPException
 import io
 
-from app.services.stability_service import StabilityService, StabilityServiceError
-from app.models.image_schemas import (
+from app.core.services.stability_service import StabilityService, StabilityServiceError
+from app.core.models.image_schemas import (
     CoreImageRequest, SD35ImageRequest, UltraImageRequest, SketchRequest,
     ImageGenerationResponse, ErrorResponse, FileValidationResponse,
     get_constants_for_frontend, get_credits_required, get_educational_prompts

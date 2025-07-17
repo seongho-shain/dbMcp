@@ -6,7 +6,7 @@ MVC 패턴에서 View 역할을 담당
 from fastapi import APIRouter, HTTPException
 from typing import List
 
-from app.models.schemas import (
+from app.core.models.schemas import (
     StudentLoginRequest,
     StudentResponse,
     LoginResponse

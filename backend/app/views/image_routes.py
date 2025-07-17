@@ -2,14 +2,14 @@
 이미지 생성 라우트 정의
 FastAPI 라우터를 통해 이미지 생성 API 엔드포인트 제공
 """
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Request
 from fastapi.responses import StreamingResponse
 from typing import Optional
 import io
 from datetime import datetime
 
 from app.controllers.image_controller import ImageController
-from app.models.image_schemas import (
+from app.core.models.image_schemas import (
     CoreImageRequest, ImageGenerationResponse, ErrorResponse,
     FileValidationResponse, HealthCheckResponse
 )
@@ -73,16 +73,43 @@ async def validate_image(
 
 @router.post("/generate/core")
 async def generate_core_image(
-    # 폼 데이터로 받기
-    prompt: str = Form(..., description="이미지 생성 프롬프트"),
-    aspect_ratio: str = Form("1:1", description="이미지 비율"),
-    output_format: str = Form("png", description="출력 형식"),
-    style_preset: Optional[str] = Form(None, description="스타일 프리셋"),
-    negative_prompt: Optional[str] = Form(None, description="네거티브 프롬프트"),
-    seed: Optional[int] = Form(None, description="시드 값"),
+    request: Request,
     controller: ImageController = Depends(get_image_controller)
 ):
     """Stable Image Core로 이미지 생성"""
+    
+    # 폼 데이터 파싱 (채팅 API와 동일한 방식)
+    form = await request.form()
+    
+    # 기본 파라미터 추출
+    prompt = form.get('prompt', '')
+    aspect_ratio = form.get('aspect_ratio', '1:1')
+    output_format = form.get('output_format', 'png')
+    style_preset = form.get('style_preset', None)
+    negative_prompt = form.get('negative_prompt', None)
+    
+    # 안전한 정수 변환
+    try:
+        seed_str = form.get('seed', '')
+        seed = int(seed_str) if seed_str and seed_str != 'undefined' and seed_str != '' else None
+    except (ValueError, TypeError):
+        seed = None
+    
+    # 사용자 정보 안전하게 추출
+    try:
+        user_id_str = form.get('user_id', '0')
+        user_id = int(user_id_str) if user_id_str and user_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        user_id = 0
+    
+    try:
+        session_id_str = form.get('session_id', '0')
+        session_id = int(session_id_str) if session_id_str and session_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        session_id = 0
+    
+    user_name = form.get('user_name', '')
+    user_type = form.get('user_type', '')
     
     # 요청 데이터 구성
     request_data = {
@@ -115,21 +142,64 @@ async def generate_core_image(
 
 @router.post("/generate/sd35")
 async def generate_sd35_image(
-    # 폼 데이터로 받기
-    prompt: str = Form(..., description="이미지 생성 프롬프트"),
-    mode: str = Form("text-to-image", description="생성 모드"),
-    model: str = Form("sd3.5-large", description="사용할 모델"),
-    aspect_ratio: Optional[str] = Form("1:1", description="이미지 비율"),
-    strength: Optional[float] = Form(None, description="변형 강도"),
-    output_format: str = Form("png", description="출력 형식"),
-    style_preset: Optional[str] = Form(None, description="스타일 프리셋"),
-    negative_prompt: Optional[str] = Form(None, description="네거티브 프롬프트"),
-    seed: Optional[int] = Form(None, description="시드 값"),
-    cfg_scale: Optional[float] = Form(None, description="CFG 스케일"),
-    image: Optional[UploadFile] = File(None, description="입력 이미지"),
+    request: Request,
     controller: ImageController = Depends(get_image_controller)
 ):
     """Stable Diffusion 3.5로 이미지 생성"""
+    
+    # 폼 데이터 파싱 (채팅 API와 동일한 방식)
+    form = await request.form()
+    
+    # 기본 파라미터 추출
+    prompt = form.get('prompt', '')
+    mode = form.get('mode', 'text-to-image')
+    model = form.get('model', 'sd3.5-large')
+    aspect_ratio = form.get('aspect_ratio', '1:1')
+    output_format = form.get('output_format', 'png')
+    style_preset = form.get('style_preset', None)
+    negative_prompt = form.get('negative_prompt', None)
+    
+    # 안전한 숫자 변환
+    try:
+        strength_str = form.get('strength', '')
+        strength = float(strength_str) if strength_str and strength_str != 'undefined' and strength_str != '' else None
+    except (ValueError, TypeError):
+        strength = None
+    
+    try:
+        seed_str = form.get('seed', '')
+        seed = int(seed_str) if seed_str and seed_str != 'undefined' and seed_str != '' else None
+    except (ValueError, TypeError):
+        seed = None
+    
+    try:
+        cfg_scale_str = form.get('cfg_scale', '')
+        cfg_scale = float(cfg_scale_str) if cfg_scale_str and cfg_scale_str != 'undefined' and cfg_scale_str != '' else None
+    except (ValueError, TypeError):
+        cfg_scale = None
+    
+    # 사용자 정보 안전하게 추출
+    try:
+        user_id_str = form.get('user_id', '0')
+        user_id = int(user_id_str) if user_id_str and user_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        user_id = 0
+    
+    try:
+        session_id_str = form.get('session_id', '0')
+        session_id = int(session_id_str) if session_id_str and session_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        session_id = 0
+    
+    user_name = form.get('user_name', '')
+    user_type = form.get('user_type', '')
+    
+    # 파일 파라미터 추출
+    image = None
+    for key, value in form.items():
+        if key == 'image' and hasattr(value, 'filename') and value.filename:
+            image = value
+            break
     
     # 디버깅: 받은 파라미터 값 확인
     print(f"SD3.5 Route received - mode: '{mode}' (type: {type(mode)}), model: '{model}' (type: {type(model)})")
@@ -175,17 +245,56 @@ async def generate_sd35_image(
 
 @router.post("/generate/ultra")
 async def generate_ultra_image(
-    prompt: str = Form(..., description="이미지 생성 프롬프트"),
-    aspect_ratio: str = Form("1:1", description="이미지 비율"),
-    strength: Optional[float] = Form(None, description="참조 이미지 영향도"),
-    output_format: str = Form("png", description="출력 형식"),
-    style_preset: Optional[str] = Form(None, description="스타일 프리셋"),
-    negative_prompt: Optional[str] = Form(None, description="네거티브 프롬프트"),
-    seed: Optional[int] = Form(None, description="시드 값"),
-    image: Optional[UploadFile] = File(None, description="참조 이미지"),
+    request: Request,
     controller: ImageController = Depends(get_image_controller)
 ):
     """Stable Image Ultra로 이미지 생성"""
+    
+    # 폼 데이터 파싱 (채팅 API와 동일한 방식)
+    form = await request.form()
+    
+    # 기본 파라미터 추출
+    prompt = form.get('prompt', '')
+    aspect_ratio = form.get('aspect_ratio', '1:1')
+    output_format = form.get('output_format', 'png')
+    style_preset = form.get('style_preset', None)
+    negative_prompt = form.get('negative_prompt', None)
+    
+    # 안전한 숫자 변환
+    try:
+        strength_str = form.get('strength', '')
+        strength = float(strength_str) if strength_str and strength_str != 'undefined' and strength_str != '' else None
+    except (ValueError, TypeError):
+        strength = None
+    
+    try:
+        seed_str = form.get('seed', '')
+        seed = int(seed_str) if seed_str and seed_str != 'undefined' and seed_str != '' else None
+    except (ValueError, TypeError):
+        seed = None
+    
+    # 사용자 정보 안전하게 추출
+    try:
+        user_id_str = form.get('user_id', '0')
+        user_id = int(user_id_str) if user_id_str and user_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        user_id = 0
+    
+    try:
+        session_id_str = form.get('session_id', '0')
+        session_id = int(session_id_str) if session_id_str and session_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        session_id = 0
+    
+    user_name = form.get('user_name', '')
+    user_type = form.get('user_type', '')
+    
+    # 파일 파라미터 추출
+    image = None
+    for key, value in form.items():
+        if key == 'image' and hasattr(value, 'filename') and value.filename:
+            image = value
+            break
     
     # 요청 데이터 구성
     request_data = {
@@ -220,16 +329,58 @@ async def generate_ultra_image(
 
 @router.post("/control/sketch")
 async def sketch_to_image(
-    prompt: str = Form(..., description="이미지 생성 프롬프트"),
-    control_strength: float = Form(0.7, description="제어 강도"),
-    output_format: str = Form("png", description="출력 형식"),
-    style_preset: Optional[str] = Form(None, description="스타일 프리셋"),
-    negative_prompt: Optional[str] = Form(None, description="네거티브 프롬프트"),
-    seed: Optional[int] = Form(None, description="시드 값"),
-    image: UploadFile = File(..., description="스케치 이미지"),
+    request: Request,
     controller: ImageController = Depends(get_image_controller)
 ):
     """스케치를 이미지로 변환"""
+    
+    # 폼 데이터 파싱 (채팅 API와 동일한 방식)
+    form = await request.form()
+    
+    # 기본 파라미터 추출
+    prompt = form.get('prompt', '')
+    output_format = form.get('output_format', 'png')
+    style_preset = form.get('style_preset', None)
+    negative_prompt = form.get('negative_prompt', None)
+    
+    # 안전한 숫자 변환
+    try:
+        control_strength_str = form.get('control_strength', '0.7')
+        control_strength = float(control_strength_str) if control_strength_str and control_strength_str != 'undefined' else 0.7
+    except (ValueError, TypeError):
+        control_strength = 0.7
+    
+    try:
+        seed_str = form.get('seed', '')
+        seed = int(seed_str) if seed_str and seed_str != 'undefined' and seed_str != '' else None
+    except (ValueError, TypeError):
+        seed = None
+    
+    # 사용자 정보 안전하게 추출
+    try:
+        user_id_str = form.get('user_id', '0')
+        user_id = int(user_id_str) if user_id_str and user_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        user_id = 0
+    
+    try:
+        session_id_str = form.get('session_id', '0')
+        session_id = int(session_id_str) if session_id_str and session_id_str != 'undefined' else 0
+    except (ValueError, TypeError):
+        session_id = 0
+    
+    user_name = form.get('user_name', '')
+    user_type = form.get('user_type', '')
+    
+    # 파일 파라미터 추출
+    image = None
+    for key, value in form.items():
+        if key == 'image' and hasattr(value, 'filename') and value.filename:
+            image = value
+            break
+    
+    if not image:
+        raise HTTPException(status_code=400, detail="스케치 이미지가 필요합니다.")
     
     # 요청 데이터 구성
     request_data = {
@@ -291,7 +442,7 @@ async def generate_educational_image(
     }
     
     # Core 모델로 이미지 생성
-    from app.models.image_schemas import CoreImageRequest
+    from app.core.models.image_schemas import CoreImageRequest
     request = CoreImageRequest(**request_data)
     result = await controller.generate_core_image(request)
     
@@ -306,7 +457,7 @@ async def generate_quick_image(
     """빠른 이미지 생성 (기본 설정 사용)"""
     
     # 기본 설정으로 Core 이미지 생성
-    from app.models.image_schemas import CoreImageRequest
+    from app.core.models.image_schemas import CoreImageRequest
     request = CoreImageRequest(
         prompt=prompt,
         style_preset=style,

@@ -9,7 +9,7 @@ from PIL import Image
 import io
 import base64
 
-from app.services.database_service import DatabaseService
+from app.core.services.database_service import DatabaseService
 
 
 class GalleryController:
@@ -65,10 +65,33 @@ class GalleryController:
                 if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
                     image.thumbnail(max_size, Image.Resampling.LANCZOS)
                 
-                # Convert back to bytes
-                img_buffer = io.BytesIO()
-                image.save(img_buffer, format=image_format, quality=85, optimize=True)
-                processed_image_data = img_buffer.getvalue()
+                # Apply compression to reduce file size
+                # Start with higher quality and reduce if file is still too large
+                quality = 85
+                while quality >= 60:
+                    img_buffer = io.BytesIO()
+                    image.save(img_buffer, format=image_format, quality=quality, optimize=True)
+                    processed_image_data = img_buffer.getvalue()
+                    
+                    # Check if compressed size is acceptable (8MB limit)
+                    if len(processed_image_data) <= 8 * 1024 * 1024:
+                        break
+                    
+                    quality -= 5
+                
+                # If still too large after compression, resize further
+                if len(processed_image_data) > 8 * 1024 * 1024:
+                    scale_factor = 0.8
+                    while len(processed_image_data) > 8 * 1024 * 1024 and scale_factor > 0.3:
+                        new_width = int(image.size[0] * scale_factor)
+                        new_height = int(image.size[1] * scale_factor)
+                        resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                        
+                        img_buffer = io.BytesIO()
+                        resized_image.save(img_buffer, format=image_format, quality=70, optimize=True)
+                        processed_image_data = img_buffer.getvalue()
+                        
+                        scale_factor -= 0.1
                 
             except Exception as e:
                 return {"success": False, "error": f"Invalid image format: {str(e)}"}
@@ -138,10 +161,8 @@ class GalleryController:
             can_delete = False
             
             if user_type == "teacher":
-                # Teachers can delete items in their sessions
-                session = self.db.get_session_by_id(item["session_id"])
-                if session and session.get("teacher_id") == user_id:
-                    can_delete = True
+                # Teachers can delete any items (admin rights)
+                can_delete = True
             elif user_type == "student":
                 # Students can only delete their own items
                 if item["user_id"] == user_id and item["user_type"] == "student":
@@ -161,7 +182,7 @@ class GalleryController:
         except Exception as e:
             return {"success": False, "error": f"Server error: {str(e)}"}
 
-    def validate_image_file(self, file_data: bytes, max_size_mb: int = 5) -> dict:
+    def validate_image_file(self, file_data: bytes, max_size_mb: int = 10) -> dict:
         """
         Validate uploaded image file
         """

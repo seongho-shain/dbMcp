@@ -1,0 +1,206 @@
+/* Auth Components Styles */
+
+.recommend-login-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--primary-bg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #e2e8f0;
+}
+
+.recommend-login-header {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.recommend-login-header h2 {
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.recommend-login-header p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.recommend-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.recommend-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.recommend-input-group label {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.recommend-input-group input {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  transition: var(--transition);
+  background: var(--primary-bg);
+  color: var(--text-primary);
+}
+
+.recommend-input-group input:focus {
+  outline: none;
+  border-color: var(--celestial-blue);
+  box-shadow: 0 0 0 3px rgba(30, 145, 214, 0.1);
+}
+
+.recommend-input-group input::placeholder {
+  color: var(--text-muted);
+}
+
+.recommend-error-message {
+  padding: 0.75rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--border-radius);
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.recommend-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.recommend-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.recommend-btn--primary {
+  background: var(--celestial-blue);
+  color: white;
+}
+
+.recommend-btn--primary:hover:not(:disabled) {
+  background: var(--french-blue);
+}
+
+.recommend-btn--secondary {
+  background: var(--tertiary-bg);
+  color: var(--text-primary);
+  border: 1px solid #d1d5db;
+}
+
+.recommend-btn--secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+/* Auth mode selector styles */
+.auth-container {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.auth-mode-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  background: var(--tertiary-bg);
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+}
+
+.auth-mode-selector button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: calc(var(--border-radius) - 2px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.auth-mode-selector button.recommend-btn--primary {
+  background: var(--celestial-blue);
+  color: white;
+}
+
+.auth-mode-selector button.recommend-btn--secondary {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.auth-mode-selector button:hover:not(.recommend-btn--primary) {
+  background: rgba(30, 145, 214, 0.1);
+  color: var(--celestial-blue);
+}
+
+/* Theme styles */
+.theme-recommend {
+  min-height: 100vh;
+  background: var(--secondary-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.recommend-dashboard {
+  background: var(--secondary-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .recommend-login-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .auth-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .auth-mode-selector {
+    flex-direction: column;
+  }
+  
+  .auth-mode-selector button {
+    text-align: center;
+  }
+}
