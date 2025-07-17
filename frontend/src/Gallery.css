@@ -1,0 +1,60 @@
+/* Gallery.css */
+body {
+  margin: 0;
+  width: 100vw;
+}
+.gallery-main {
+  width: 100vw;
+  min-height: 100vh;
+  padding: var(--spacing-2xl) 0;
+  background-color: var(--secondary-bg);
+  color: var(--text-primary);
+}
+
+.gallery-header {
+  text-align: center;
+  margin-bottom: var(--spacing-2xl);
+  padding: 0 var(--spacing-2xl);
+}
+
+.gallery-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.gallery-header p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.gallery-container {
+  width: 100%;
+  min-height: 600px;
+  padding: 0 var(--spacing-2xl);
+}
+
+/* 데스크톱 화면용 스타일 */
+@media (min-width: 1024px) {
+  .gallery-header h1 {
+    font-size: 3rem;
+  }
+
+  .gallery-header p {
+    font-size: 1.2rem;
+    max-width: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  .gallery-header h1 {
+    font-size: 2rem;
+  }
+  
+  .gallery-container {
+    padding: 0 var(--spacing-lg);
+  }
+}

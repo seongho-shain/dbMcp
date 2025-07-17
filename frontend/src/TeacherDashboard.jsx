@@ -1,71 +1,69 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from './AuthContext'
-import ChatInterface from './components/ChatInterface'
-import ImageGenerator from './components/ImageGeneration/ImageGenerator'
-import './TeacherDashboard.css'
+import { useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import ChatInterface from './components/ChatInterface';
+import ImageGenerator from './components/ImageGeneration/ImageGenerator';
+import './TeacherDashboard.css';
 
-const API_BASE_URL = 'http://localhost:8000'
+const API_BASE_URL = 'http://localhost:8000';
 
 function TeacherDashboard() {
-  const [sessions, setSessions] = useState([])
-  const [students, setStudents] = useState({})
-  const [loading, setLoading] = useState(false)
-  const [creatingClass, setCreatingClass] = useState(false)
-  const [selectedSession, setSelectedSession] = useState(null)
-  const [showImageGenerator, setShowImageGenerator] = useState(false)
-  const { user, logout } = useAuth()
+  const [sessions, setSessions] = useState([]);
+  const [students, setStudents] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [creatingClass, setCreatingClass] = useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const { user, logout } = useAuth();
 
   const fetchSessions = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/teacher/${user.id}/sessions`)
+      const response = await fetch(`${API_BASE_URL}/teacher/${user.id}/sessions`);
       if (response.ok) {
-        const data = await response.json()
-        setSessions(data)
-        
-        // Fetch students for each session
-        const studentsData = {}
+        const data = await response.json();
+        setSessions(data);
+
+        const studentsData = {};
         for (const session of data) {
-          const studentsResponse = await fetch(`${API_BASE_URL}/session/${session.id}/students`)
+          const studentsResponse = await fetch(`${API_BASE_URL}/session/${session.id}/students`);
           if (studentsResponse.ok) {
-            const sessionStudents = await studentsResponse.json()
-            studentsData[session.id] = sessionStudents
+            const sessionStudents = await studentsResponse.json();
+            studentsData[session.id] = sessionStudents;
           }
         }
-        setStudents(studentsData)
+        setStudents(studentsData);
       }
     } catch (error) {
-      console.error('Error fetching sessions:', error)
+      console.error('Error fetching sessions:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const createNewClass = async () => {
-    setCreatingClass(true)
+    setCreatingClass(true);
     try {
       const response = await fetch(`${API_BASE_URL}/teacher/create-class`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ teacher_id: user.id })
-      })
-      
+        body: JSON.stringify({ teacher_id: user.id }),
+      });
+
       if (response.ok) {
-        const data = await response.json()
-        alert(`새 클래스가 생성되었습니다! 클래스 코드: ${data.class_code}`)
-        fetchSessions()
+        const data = await response.json();
+        alert(`새 클래스가 생성되었습니다! 클래스 코드: ${data.class_code}`);
+        fetchSessions();
       }
     } catch (error) {
-      console.error('Error creating class:', error)
-      alert('클래스 생성에 실패했습니다.')
+      console.error('Error creating class:', error);
+      alert('클래스 생성에 실패했습니다.');
     } finally {
-      setCreatingClass(false)
+      setCreatingClass(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchSessions()
-  }, [])
+    fetchSessions();
+  }, []);
 
   return (
     <div className="recommend-dashboard__main">
@@ -82,15 +80,15 @@ function TeacherDashboard() {
           </div>
         </div>
       </div>
-      
+
       <div className="recommend-dashboard__grid">
         <div className="recommend-card">
           <div className="recommend-card__header">⚡ 클래스 관리</div>
           <div className="recommend-card__content">
             <div className="recommend-features">
               <div className="recommend-feature">
-                <button 
-                  onClick={createNewClass} 
+                <button
+                  onClick={createNewClass}
                   disabled={creatingClass}
                   className="recommend-btn recommend-btn--primary"
                 >
@@ -106,28 +104,7 @@ function TeacherDashboard() {
             {loading && <p>로딩 중...</p>}
           </div>
         </div>
-        
-        <div className="recommend-card">
-          <div className="recommend-card__header">🎨 교육 도구</div>
-          <div className="recommend-card__content">
-            <div className="recommend-features">
-              <div className="recommend-feature">
-                <div className="recommend-feature__icon">🖼️</div>
-                <div className="recommend-feature__content">
-                  <h4>AI 이미지 생성</h4>
-                  <p>교육 자료용 이미지를 AI로 생성하세요</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowImageGenerator(true)}
-                className="recommend-btn recommend-btn--primary"
-              >
-                🎨 이미지 생성
-              </button>
-            </div>
-          </div>
-        </div>
-        
+
         <div className="recommend-card">
           <div className="recommend-card__header">📊 클래스 현황</div>
           <div className="recommend-card__content">
@@ -178,7 +155,7 @@ function TeacherDashboard() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="recommend-features">
                         <div className="recommend-feature">
                           <div className="recommend-feature__icon">👥</div>
@@ -198,8 +175,8 @@ function TeacherDashboard() {
                           </div>
                         </div>
                       </div>
-                      
-                      <button 
+
+                      <button
                         onClick={() => setSelectedSession(session)}
                         className="recommend-btn recommend-btn--primary"
                       >
@@ -213,13 +190,13 @@ function TeacherDashboard() {
           </div>
         </div>
       </div>
-      
+
       {selectedSession && (
         <div className="recommend-dashboard__grid">
           <div className="recommend-card" style={{ gridColumn: '1 / -1' }}>
             <div className="recommend-card__header">
               🤖 AI 채팅 - {selectedSession.class_code}
-              <button 
+              <button
                 onClick={() => setSelectedSession(null)}
                 className="recommend-btn recommend-btn--secondary"
                 style={{ marginLeft: 'auto' }}
@@ -233,18 +210,14 @@ function TeacherDashboard() {
           </div>
         </div>
       )}
-      
-      {showImageGenerator && (
-        <div className="recommend-dashboard__grid">
-          <div className="recommend-card" style={{ gridColumn: '1 / -1' }}>
-            <div className="recommend-card__content">
-              <ImageGenerator onClose={() => setShowImageGenerator(false)} />
-            </div>
-          </div>
+
+      <div className="recommend-dashboard__grid">
+        <div className="recommend-card" style={{ gridColumn: '1 / -1', padding: 0, overflow: 'hidden' }}>
+          <ImageGenerator />
         </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }
 
-export default TeacherDashboard
+export default TeacherDashboard;

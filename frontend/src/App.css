@@ -141,3 +141,68 @@ button:focus {
     --text-muted: #4a5568;
   }
 }
+
+/* --- 신규 추가된 네비게이션 스타일 --- */
+
+.main-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--secondary-bg, #f8fafc);
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-xl, 2rem);
+  background: var(--primary-bg, #ffffff);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06));
+  height: 70px;
+  flex-shrink: 0;
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+}
+
+.app-nav {
+  display: flex;
+  gap: var(--spacing-md, 1rem);
+  background-color: var(--secondary-bg, #f8fafc);
+  padding: var(--spacing-xs, 0.25rem);
+  border-radius: var(--border-radius, 8px);
+  margin-right: var(--spacing-md, 1rem); /* 오른쪽 마진 추가 */
+}
+
+.nav-button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  background-color: transparent;
+  color: var(--text-secondary, #475569);
+}
+
+.nav-button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary, #1e293b);
+}
+
+.nav-button.active {
+  background-color: var(--primary-bg, #ffffff);
+  color: var(--french-blue, #0072bb);
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.app-content {
+  flex-grow: 1;
+  overflow-y: auto;
+}

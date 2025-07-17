@@ -217,7 +217,6 @@ const ImageGenerator = ({ onClose }) => {
     <div className="image-generator">
       <div className="image-generator-header">
         <h2>🎨 AI 이미지 생성</h2>
-        <button onClick={onClose} className="close-btn">✕</button>
       </div>
 
       <div className="image-generator-tabs">

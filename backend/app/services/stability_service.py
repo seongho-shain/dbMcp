@@ -8,7 +8,7 @@ import io
 from typing import Optional, Dict, Any, BinaryIO
 from PIL import Image
 import logging
-import re
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
@@ -24,112 +24,6 @@ class StabilityService:
     
     BASE_URL = "https://api.stability.ai"
     
-    @staticmethod
-    def normalize_enum_value(value: str) -> str:
-        """
-        Enum 값을 정규화하여 API에 맞는 형식으로 변환
-        
-        Examples:
-            'generationmode.image_to_image' -> 'image-to-image'
-            'SD35Model.LARGE' -> 'sd3.5-large'
-            'OutputFormat.PNG' -> 'png'
-            'StylePreset.PHOTOGRAPHIC' -> 'photographic'
-        """
-        if not isinstance(value, str):
-            return str(value)
-        
-        # 이미 정규화된 일반적인 값들은 그대로 반환 (더 구체적인 검사)
-        if ('.' not in value and not value.isupper() and 
-            not value.startswith('sd3.') and  # sd3.5-large 같은 값 제외
-            ':' not in value):  # 16:9 같은 aspect ratio 제외
-            return value
-        
-        # 이미 정규화된 특수 값들 체크
-        if value in ['sd3.5-large', 'sd3.5-large-turbo', 'sd3.5-medium', 
-                    'text-to-image', 'image-to-image', 'digital-art', 
-                    '3d-model', 'pixel-art', 'fantasy-art']:
-            return value
-        
-        # 종횡비 값들은 그대로 반환
-        if ':' in value and value.replace(':', '').replace('.', '').isdigit():
-            return value
-        
-        # Enum 클래스명.값 형태를 처리
-        if '.' in value:
-            # 클래스명과 값을 분리
-            parts = value.split('.')
-            if len(parts) == 2:
-                class_name, enum_value = parts
-                
-                # SD35Model 처리
-                if class_name.lower() == 'sd35model':
-                    if enum_value.upper() == 'LARGE':
-                        return 'sd3.5-large'
-                    elif enum_value.upper() == 'LARGE_TURBO':
-                        return 'sd3.5-large-turbo'
-                    elif enum_value.upper() == 'MEDIUM':
-                        return 'sd3.5-medium'
-                
-                # GenerationMode 처리
-                elif class_name.lower() == 'generationmode':
-                    if enum_value.upper() == 'TEXT_TO_IMAGE':
-                        return 'text-to-image'
-                    elif enum_value.upper() == 'IMAGE_TO_IMAGE':
-                        return 'image-to-image'
-                
-                # OutputFormat 처리
-                elif class_name.lower() == 'outputformat':
-                    return enum_value.lower()
-                
-                # StylePreset 처리
-                elif class_name.lower() == 'stylepreset':
-                    if enum_value.upper() == 'NONE':
-                        return ''
-                    elif enum_value.upper() == 'MODEL_3D':
-                        return '3d-model'
-                    elif enum_value.upper() == 'DIGITAL_ART':
-                        return 'digital-art'
-                    elif enum_value.upper() == 'PIXEL_ART':
-                        return 'pixel-art'
-                    elif enum_value.upper() == 'FANTASY_ART':
-                        return 'fantasy-art'
-                    else:
-                        return enum_value.lower().replace('_', '-')
-                
-                # AspectRatio 처리
-                elif class_name.lower() == 'aspectratio':
-                    # LANDSCAPE_16_9 -> 16:9
-                    if '_' in enum_value:
-                        ratio_part = enum_value.split('_')[-2:]
-                        if len(ratio_part) == 2:
-                            return f"{ratio_part[0]}:{ratio_part[1]}"
-                    elif enum_value.upper() == 'SQUARE':
-                        return '1:1'
-                    elif enum_value.upper() == 'ULTRA_WIDE':
-                        return '21:9'
-                    elif enum_value.upper() == 'ULTRA_PORTRAIT':
-                        return '9:21'
-                    
-                # 기본적으로 소문자로 변환하고 언더스코어를 하이픈으로 변경
-                return enum_value.lower().replace('_', '-')
-        
-        # 대문자로만 된 값들 처리 (예: 'LARGE' -> 'sd3.5-large')
-        if value.isupper():
-            if value == 'LARGE':
-                return 'sd3.5-large'
-            elif value == 'LARGE_TURBO':
-                return 'sd3.5-large-turbo'
-            elif value == 'MEDIUM':
-                return 'sd3.5-medium'
-            elif value == 'TEXT_TO_IMAGE':
-                return 'text-to-image'
-            elif value == 'IMAGE_TO_IMAGE':
-                return 'image-to-image'
-            else:
-                return value.lower().replace('_', '-')
-        
-        return value
-    
     def __init__(self, api_key: Optional[str] = None):
         """
         Args:
@@ -144,6 +38,10 @@ class StabilityService:
             "Accept": "application/json"
         }
     
+    def _get_enum_value(self, value: Any) -> Any:
+        """Enum 멤버인 경우 .value를, 그렇지 않으면 원래 값을 반환"""
+        return value.value if isinstance(value, Enum) else value
+
     def _make_request(self, endpoint: str, method: str = "POST", data: Optional[Dict] = None, 
                      files: Optional[Dict] = None) -> requests.Response:
         """API 요청을 보내고 응답을 처리"""
@@ -178,39 +76,24 @@ class StabilityService:
                           negative_prompt: Optional[str] = None, seed: Optional[int] = None) -> bytes:
         """
         Stable Image Core로 이미지 생성
-        
-        Args:
-            prompt: 이미지 생성 프롬프트
-            aspect_ratio: 이미지 비율 (1:1, 16:9, 9:16, 3:2, 2:3, 4:3, 3:4)
-            output_format: 출력 형식 (png, jpeg, webp)
-            style_preset: 스타일 프리셋
-            negative_prompt: 네거티브 프롬프트
-            seed: 시드 값
-        
-        Returns:
-            생성된 이미지 바이너리 데이터
         """
-        # Core API는 multipart/form-data 형식을 사용해야 함
-        # Enum 값을 실제 문자열로 변환
         data = {
             "prompt": prompt,
-            "aspect_ratio": self.normalize_enum_value(aspect_ratio.value if hasattr(aspect_ratio, 'value') else aspect_ratio),
-            "output_format": self.normalize_enum_value(output_format.value if hasattr(output_format, 'value') else output_format)
+            "aspect_ratio": self._get_enum_value(aspect_ratio),
+            "output_format": self._get_enum_value(output_format)
         }
         
         if style_preset:
-            data["style_preset"] = self.normalize_enum_value(style_preset.value if hasattr(style_preset, 'value') else style_preset)
+            data["style_preset"] = self._get_enum_value(style_preset)
         if negative_prompt:
             data["negative_prompt"] = negative_prompt
         if seed is not None:
             data["seed"] = str(seed)
         
-        # 빈 파일 추가 (API 문서 예시에 따라)
         files = {"none": ""}
         
         logger.info(f"Core 이미지 생성 요청: {prompt[:50]}...")
         
-        # multipart/form-data 요청을 위해 headers 수정
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Accept": "image/*"
@@ -233,11 +116,9 @@ class StabilityService:
                     response_data=error_data
                 )
             
-            # 응답이 이미지인지 확인
             if response.headers.get('content-type', '').startswith('image/'):
                 return response.content
             else:
-                # JSON 응답인 경우 base64 디코딩 등 처리
                 try:
                     json_data = response.json()
                     if 'artifacts' in json_data and len(json_data['artifacts']) > 0:
@@ -259,36 +140,22 @@ class StabilityService:
                            cfg_scale: Optional[float] = None) -> bytes:
         """
         Stable Diffusion 3.5로 이미지 생성
-        
-        Args:
-            prompt: 이미지 생성 프롬프트
-            mode: 생성 모드 (text-to-image, image-to-image)
-            model: 사용할 모델 (sd3.5-large, sd3.5-large-turbo, sd3.5-medium)
-            image: 입력 이미지 (image-to-image 모드에서 필요)
-            strength: 변형 강도 (0.0-1.0)
-            aspect_ratio: 이미지 비율 (text-to-image 모드에서만)
-            output_format: 출력 형식
-            style_preset: 스타일 프리셋
-            negative_prompt: 네거티브 프롬프트
-            seed: 시드 값
-        
-        Returns:
-            생성된 이미지 바이너리 데이터
         """
+        mode_value = self._get_enum_value(mode)
+        model_value = self._get_enum_value(model)
+
         files = {}
         data = {
             "prompt": prompt,
-            "mode": self.normalize_enum_value(mode),
-            "model": self.normalize_enum_value(model),
-            "output_format": self.normalize_enum_value(output_format.value if hasattr(output_format, 'value') else output_format)
+            "mode": mode_value,
+            "model": model_value,
+            "output_format": self._get_enum_value(output_format)
         }
         
-        # text-to-image 모드에서만 aspect_ratio 허용
-        if self.normalize_enum_value(mode) == "text-to-image" and aspect_ratio:
-            data["aspect_ratio"] = self.normalize_enum_value(aspect_ratio.value if hasattr(aspect_ratio, 'value') else aspect_ratio)
+        if mode_value == "text-to-image" and aspect_ratio:
+            data["aspect_ratio"] = self._get_enum_value(aspect_ratio)
         
-        # image-to-image 모드 처리
-        if self.normalize_enum_value(mode) == "image-to-image":
+        if mode_value == "image-to-image":
             if image is None:
                 raise StabilityServiceError("image-to-image 모드에서는 이미지가 필요합니다.")
             if strength is None:
@@ -298,7 +165,7 @@ class StabilityService:
             data["strength"] = strength
         
         if style_preset:
-            data["style_preset"] = self.normalize_enum_value(style_preset.value if hasattr(style_preset, 'value') else style_preset)
+            data["style_preset"] = self._get_enum_value(style_preset)
         if negative_prompt:
             data["negative_prompt"] = negative_prompt
         if seed is not None:
@@ -306,12 +173,11 @@ class StabilityService:
         if cfg_scale is not None:
             data["cfg_scale"] = str(cfg_scale)
         
-        logger.info(f"SD3.5 이미지 생성 요청: {mode} - {prompt[:50]}...")
+        logger.info(f"SD3.5 이미지 생성 요청: {mode_value} - {prompt[:50]}...")
         
-        # multipart/form-data 요청을 위해 headers 수정
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Accept": "image/*"  # 이미지 바이너리로 직접 받기
+            "Accept": "image/*"
         }
         
         try:
@@ -331,11 +197,9 @@ class StabilityService:
                     response_data=error_data
                 )
             
-            # 응답이 이미지인지 확인
             if response.headers.get('content-type', '').startswith('image/'):
                 return response.content
             else:
-                # JSON 응답인 경우 처리
                 try:
                     json_data = response.json()
                     if 'artifacts' in json_data and len(json_data['artifacts']) > 0:
@@ -355,25 +219,12 @@ class StabilityService:
                            negative_prompt: Optional[str] = None, seed: Optional[int] = None) -> bytes:
         """
         Stable Image Ultra로 이미지 생성
-        
-        Args:
-            prompt: 이미지 생성 프롬프트
-            aspect_ratio: 이미지 비율
-            output_format: 출력 형식
-            image: 참조 이미지 (선택사항)
-            strength: 참조 이미지 영향도
-            style_preset: 스타일 프리셋
-            negative_prompt: 네거티브 프롬프트
-            seed: 시드 값
-        
-        Returns:
-            생성된 이미지 바이너리 데이터
         """
         files = {}
         data = {
             "prompt": prompt,
-            "aspect_ratio": self.normalize_enum_value(aspect_ratio.value if hasattr(aspect_ratio, 'value') else aspect_ratio),
-            "output_format": self.normalize_enum_value(output_format.value if hasattr(output_format, 'value') else output_format)
+            "aspect_ratio": self._get_enum_value(aspect_ratio),
+            "output_format": self._get_enum_value(output_format)
         }
         
         if image:
@@ -382,7 +233,7 @@ class StabilityService:
                 data["strength"] = strength
         
         if style_preset:
-            data["style_preset"] = self.normalize_enum_value(style_preset.value if hasattr(style_preset, 'value') else style_preset)
+            data["style_preset"] = self._get_enum_value(style_preset)
         if negative_prompt:
             data["negative_prompt"] = negative_prompt
         if seed is not None:
@@ -390,10 +241,9 @@ class StabilityService:
         
         logger.info(f"Ultra 이미지 생성 요청: {prompt[:50]}...")
         
-        # multipart/form-data 요청을 위해 headers 수정
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Accept": "image/*"  # 이미지 바이너리로 직접 받기
+            "Accept": "image/*"
         }
         
         try:
@@ -413,11 +263,9 @@ class StabilityService:
                     response_data=error_data
                 )
             
-            # 응답이 이미지인지 확인
             if response.headers.get('content-type', '').startswith('image/'):
                 return response.content
             else:
-                # JSON 응답인 경우 처리
                 try:
                     json_data = response.json()
                     if 'artifacts' in json_data and len(json_data['artifacts']) > 0:
@@ -436,18 +284,6 @@ class StabilityService:
                        negative_prompt: Optional[str] = None, seed: Optional[int] = None) -> bytes:
         """
         스케치를 이미지로 변환
-        
-        Args:
-            prompt: 이미지 생성 프롬프트
-            image: 스케치 이미지
-            control_strength: 제어 강도 (0.0-1.0)
-            output_format: 출력 형식
-            style_preset: 스타일 프리셋
-            negative_prompt: 네거티브 프롬프트
-            seed: 시드 값
-        
-        Returns:
-            생성된 이미지 바이너리 데이터
         """
         files = {
             "image": ("sketch.png", io.BytesIO(image), "image/png")
@@ -456,11 +292,11 @@ class StabilityService:
         data = {
             "prompt": prompt,
             "control_strength": control_strength,
-            "output_format": self.normalize_enum_value(output_format.value if hasattr(output_format, 'value') else output_format)
+            "output_format": self._get_enum_value(output_format)
         }
         
         if style_preset:
-            data["style_preset"] = self.normalize_enum_value(style_preset.value if hasattr(style_preset, 'value') else style_preset)
+            data["style_preset"] = self._get_enum_value(style_preset)
         if negative_prompt:
             data["negative_prompt"] = negative_prompt
         if seed is not None:
@@ -468,10 +304,9 @@ class StabilityService:
         
         logger.info(f"스케치→이미지 변환 요청: {prompt[:50]}...")
         
-        # multipart/form-data 요청을 위해 headers 수정
         headers = {
             "Authorization": f"Bearer {self.api_key}",
-            "Accept": "image/*"  # 이미지 바이너리로 직접 받기
+            "Accept": "image/*"
         }
         
         try:
@@ -491,11 +326,9 @@ class StabilityService:
                     response_data=error_data
                 )
             
-            # 응답이 이미지인지 확인
             if response.headers.get('content-type', '').startswith('image/'):
                 return response.content
             else:
-                # JSON 응답인 경우 처리
                 try:
                     json_data = response.json()
                     if 'artifacts' in json_data and len(json_data['artifacts']) > 0:
@@ -512,31 +345,21 @@ class StabilityService:
     def validate_image_file(self, image_file: BinaryIO) -> Dict[str, Any]:
         """
         이미지 파일 검증
-        
-        Args:
-            image_file: 이미지 파일 스트림
-        
-        Returns:
-            검증 결과 딕셔너리
         """
         try:
-            # PIL로 이미지 열기
             image = Image.open(image_file)
             
-            # 기본 정보 수집
             width, height = image.size
             format_name = image.format
             mode = image.mode
             
-            # 파일 크기 확인 (50MB 제한)
-            image_file.seek(0, 2)  # 파일 끝으로 이동
+            image_file.seek(0, 2)
             file_size = image_file.tell()
-            image_file.seek(0)  # 파일 처음으로 이동
+            image_file.seek(0)
             
-            # 검증 규칙
-            max_size = 50 * 1024 * 1024  # 50MB
+            max_size = 50 * 1024 * 1024
             min_resolution = 64
-            max_pixels = 9437184  # 약 3072x3072
+            max_pixels = 9437184
             
             errors = []
             
@@ -549,12 +372,10 @@ class StabilityService:
             if width * height > max_pixels:
                 errors.append(f"이미지 픽셀 수가 {max_pixels}를 초과합니다.")
             
-            # 종횡비 확인 (1:2.5 ~ 2.5:1)
             aspect_ratio = width / height
             if aspect_ratio < 0.4 or aspect_ratio > 2.5:
                 errors.append("이미지 종횡비가 지원 범위(1:2.5 ~ 2.5:1)를 벗어납니다.")
             
-            # 지원 형식 확인
             supported_formats = ['JPEG', 'PNG', 'WEBP']
             if format_name not in supported_formats:
                 errors.append(f"지원되지 않는 이미지 형식입니다. 지원 형식: {', '.join(supported_formats)}")
@@ -582,12 +403,6 @@ class StabilityService:
     def get_image_info(self, image_data: bytes) -> Dict[str, Any]:
         """
         이미지 바이너리 데이터의 정보 조회
-        
-        Args:
-            image_data: 이미지 바이너리 데이터
-        
-        Returns:
-            이미지 정보 딕셔너리
         """
         try:
             image = Image.open(io.BytesIO(image_data))

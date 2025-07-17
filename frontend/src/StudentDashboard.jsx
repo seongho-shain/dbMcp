@@ -1,12 +1,10 @@
-import { useState } from 'react'
-import { useAuth } from './AuthContext'
-import ChatInterface from './components/ChatInterface'
-import ImageGenerator from './components/ImageGeneration/ImageGenerator'
-import './StudentDashboard.css'
+import { useAuth } from './AuthContext';
+import ChatInterface from './components/ChatInterface';
+import ImageGenerator from './components/ImageGeneration/ImageGenerator';
+import './StudentDashboard.css';
 
 function StudentDashboard() {
-  const { user, logout } = useAuth()
-  const [showImageGenerator, setShowImageGenerator] = useState(false)
+  const { user, logout } = useAuth();
 
   return (
     <div className="recommend-dashboard__main">
@@ -23,7 +21,7 @@ function StudentDashboard() {
           </div>
         </div>
       </div>
-      
+
       <div className="recommend-dashboard__grid">
         <div className="recommend-card">
           <div className="recommend-card__header">📚 클래스 정보</div>
@@ -43,71 +41,43 @@ function StudentDashboard() {
             </div>
           </div>
         </div>
-        
+
         <div className="recommend-card recommend-card--highlight">
-          <div className="recommend-card__header">🎯 학습 가이드</div>
+          <div className="recommend-card__header">🎯 채팅 가이드</div>
           <div className="recommend-card__content">
             <div className="recommend-features">
               <div className="recommend-feature">
-                <div className="recommend-feature__icon">✅</div>
+                <div className="recommend-feature__icon">💡</div>
                 <div className="recommend-feature__content">
-                  <h4>클래스 참여 완료</h4>
-                  <p>성공적으로 클래스에 참여했습니다!</p>
+                  <h4>AI 채팅 잘 쓰는 법 (OpenAI)</h4>
+                  <p><strong>명확하고 구체적으로 질문하세요.</strong><br/>배경 정보, 원하는 형식, 어조를 포함하면 더 좋은 답변을 얻을 수 있습니다. (예: "중학생 수준으로 설명해줘. 아인슈타인의 상대성 이론에 대해 3문단으로 요약해줘.")</p>
                 </div>
               </div>
               <div className="recommend-feature">
-                <div className="recommend-feature__icon">💬</div>
+                <div className="recommend-feature__icon">🎨</div>
                 <div className="recommend-feature__content">
-                  <h4>AI 채팅 이용</h4>
-                  <p>아래 채팅창에서 AI와 1:1 대화를 나누어보세요.</p>
+                  <h4>AI 이미지 잘 쓰는 법 (Stability AI)</h4>
+                  <p><strong>생생하고 상세하게 묘사하세요.</strong><br/>주제, 배경, 스타일, 색감, 구도 등을 구체적으로 작성하면 상상에 가까운 이미지를 얻을 수 있습니다. (예: "푸른 바다 위 절벽에 있는 하얀 등대, 유화 스타일, 해질녘 노을")</p>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="recommend-card">
-          <div className="recommend-card__header">🎨 창의 도구</div>
-          <div className="recommend-card__content">
-            <div className="recommend-features">
-              <div className="recommend-feature">
-                <div className="recommend-feature__icon">🖼️</div>
-                <div className="recommend-feature__content">
-                  <h4>AI 이미지 생성</h4>
-                  <p>상상한 이미지를 AI로 만들어보세요</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowImageGenerator(true)}
-                className="recommend-btn recommend-btn--primary"
-              >
-                🎨 이미지 생성
-              </button>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div className="recommend-dashboard__grid">
         <div className="recommend-card" style={{ gridColumn: '1 / -1' }}>
-          <div className="recommend-card__header">🤖 AI 채팅</div>
-          <div className="recommend-card__content">
-            <ChatInterface />
-          </div>
+          <ChatInterface />
         </div>
       </div>
-      
-      {showImageGenerator && (
-        <div className="recommend-dashboard__grid">
-          <div className="recommend-card" style={{ gridColumn: '1 / -1' }}>
-            <div className="recommend-card__content">
-              <ImageGenerator onClose={() => setShowImageGenerator(false)} />
-            </div>
-          </div>
+
+      <div className="recommend-dashboard__grid">
+        <div className="recommend-card" style={{ gridColumn: '1 / -1', padding: 0, overflow: 'hidden' }}>
+          <ImageGenerator />
         </div>
-      )}
+      </div>
     </div>
-  )
+  );
 }
 
-export default StudentDashboard
+export default StudentDashboard;

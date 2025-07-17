@@ -1,33 +1,30 @@
-import { useState } from 'react'
-import { AuthProvider, useAuth } from './AuthContext'
-import TeacherLogin from './TeacherLogin'
-import StudentLogin from './StudentLogin'
-import TeacherSignup from './TeacherSignup'
-import TeacherDashboard from './TeacherDashboard'
-import StudentDashboard from './StudentDashboard'
-import './App.css'
+import { useState } from 'react';
+import { AuthProvider, useAuth } from './AuthContext';
+import TeacherLogin from './TeacherLogin';
+import StudentLogin from './StudentLogin';
+import TeacherSignup from './TeacherSignup';
+import TeacherDashboard from './TeacherDashboard';
+import StudentDashboard from './StudentDashboard';
+import Gallery from './Gallery';
+import './App.css';
 
 function App() {
-  const [authMode, setAuthMode] = useState('student') // 'student', 'teacher', 'signup'
-  
   return (
-
-      <AuthProvider>
-        <AuthenticatedApp authMode={authMode} setAuthMode={setAuthMode} />
-      </AuthProvider>
-
-  )
+    <AuthProvider>
+      <AuthenticatedApp />
+    </AuthProvider>
+  );
 }
 
-function AuthenticatedApp({ authMode, setAuthMode }) {
-  const { user, loading } = useAuth()
-  
+function AuthenticatedApp() {
+  const { user, loading } = useAuth();
+  const [authMode, setAuthMode] = useState('student');
+  const [activeNav, setActiveNav] = useState('tool');
+
   if (loading) {
-    return <div className="theme-recommend recommend-dashboard">
-      <div className="loading">Loading...</div>
-    </div>
+    return <div className="theme-recommend recommend-dashboard"><div className="loading">Loading...</div></div>;
   }
-  
+
   if (!user) {
     return (
       <div className="theme-recommend recommend-dashboard">
@@ -58,21 +55,34 @@ function AuthenticatedApp({ authMode, setAuthMode }) {
           {authMode === 'signup' && <TeacherSignup onSuccess={() => setAuthMode('teacher')} />}
         </div>
       </div>
-    )
+    );
   }
-  
+
   return (
-    <div className="theme-recommend recommend-dashboard">
-      <div className="recommend-dashboard__header">
-        <div className="recommend-header-content">
-          <h1>AI 교육 대시보드</h1>
-          <div className="recommend-header-actions">
-          </div>
-        </div>
-      </div>
-      {user.user_type === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}
+    <div className="main-container">
+      <header className="app-header">
+        <h1>AI 교육 대시보드</h1>
+        <nav className="app-nav">
+          <button 
+            className={`nav-button ${activeNav === 'tool' ? 'active' : ''}`}
+            onClick={() => setActiveNav('tool')}
+          >
+            툴
+          </button>
+          <button 
+            className={`nav-button ${activeNav === 'gallery' ? 'active' : ''}`}
+            onClick={() => setActiveNav('gallery')}
+          >
+            갤러리
+          </button>
+        </nav>
+      </header>
+      <main className="app-content">
+        {activeNav === 'tool' && (user.user_type === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />)}
+        {activeNav === 'gallery' && <Gallery />}
+      </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
