@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { AuthProvider, useAuth } from './AuthContext'
-import { ThemeProvider } from './contexts/ThemeContext'
-import ThemeSelector from './components/ThemeSelector'
 import TeacherLogin from './TeacherLogin'
 import StudentLogin from './StudentLogin'
 import TeacherSignup from './TeacherSignup'
@@ -13,11 +11,11 @@ function App() {
   const [authMode, setAuthMode] = useState('student') // 'student', 'teacher', 'signup'
   
   return (
-    <ThemeProvider>
+
       <AuthProvider>
         <AuthenticatedApp authMode={authMode} setAuthMode={setAuthMode} />
       </AuthProvider>
-    </ThemeProvider>
+
   )
 }
 
@@ -69,7 +67,6 @@ function AuthenticatedApp({ authMode, setAuthMode }) {
         <div className="recommend-header-content">
           <h1>AI 교육 대시보드</h1>
           <div className="recommend-header-actions">
-            <ThemeSelector />
           </div>
         </div>
       </div>

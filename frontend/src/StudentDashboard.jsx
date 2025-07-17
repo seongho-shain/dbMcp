@@ -1,6 +1,6 @@
 import { useAuth } from './AuthContext'
 import ChatInterface from './components/ChatInterface'
-import './App.css'
+import './StudentDashboard.css'
 
 function StudentDashboard() {
   const { user, logout } = useAuth()

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from './AuthContext'
-import './Auth.css'
+import './Login.css'
 
 const API_BASE_URL = 'http://localhost:8000'
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from './AuthContext'
 import ChatInterface from './components/ChatInterface'
-import './App.css'
+import './TeacherDashboard.css'
 
 const API_BASE_URL = 'http://localhost:8000'
 

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import './Auth.css'
 
 const API_BASE_URL = 'http://localhost:8000'
 
